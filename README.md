@@ -3,4 +3,4 @@ Neo4j database ASP.NET Identity Provider based on the [Neo4jClient](https://gith
 
 Get it on [Nuget](https://www.nuget.org/packages/Neo4j.AspNetCore.Identity/1.0.0).
 
-You can check the sample for integration hints. Issues are welcomed. :)
+You can check the sample for integration hints.
