@@ -15,7 +15,7 @@ namespace Neo4j.AspNetCore.Identity
         }
 
         [JsonProperty]
-        public string NormalizedValue { get; private set; }
+        public virtual string NormalizedValue { get; private set; }
 
         public virtual void SetNormalizedEmail(string normalizedEmail)
         {

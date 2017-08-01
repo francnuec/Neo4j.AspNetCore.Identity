@@ -8,18 +8,6 @@ namespace Neo4j.AspNetCore.Identity
     [Table(Labels.Login)]
     public class IdentityExternalLogin : IEquatable<IdentityExternalLogin>, IEquatable<UserLoginInfo>
     {
-        [JsonProperty]
-        public string LoginProvider { get; protected internal set; }
-
-        [JsonProperty]
-        public string ProviderKey { get; protected internal set; }
-
-        [JsonProperty]
-        public string ProviderDisplayName { get; protected internal set; }
-
-        [JsonProperty]
-        public Occurrence CreatedOn { get; private set; }
-
         public IdentityExternalLogin()
         {
             CreatedOn = new Occurrence();
@@ -31,6 +19,18 @@ namespace Neo4j.AspNetCore.Identity
             ProviderKey = info.ProviderKey;
             ProviderDisplayName = info.ProviderDisplayName;
         }
+
+        [JsonProperty]
+        public virtual string LoginProvider { get; protected internal set; }
+
+        [JsonProperty]
+        public virtual string ProviderKey { get; protected internal set; }
+
+        [JsonProperty]
+        public virtual string ProviderDisplayName { get; protected internal set; }
+
+        [JsonProperty]
+        public virtual Occurrence CreatedOn { get; private set; }
 
         public UserLoginInfo ToUserLoginInfo()
         {

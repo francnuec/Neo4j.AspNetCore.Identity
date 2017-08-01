@@ -41,14 +41,14 @@ namespace Neo4j.AspNetCore.Identity
             Neo4jAnnotations.AddEntityType(typeof(TUser));
         }
 
-        internal class FindUserResult<T>
+        protected internal class FindUserResult<T>
             where T : IdentityUser//, new()
         {
-            public T User { private get; set; }
-            public IEnumerable<IdentityExternalLogin> Logins { private get; set; }
-            public IEnumerable<IdentityClaim> Claims { private get; set; }
+            public virtual T User { private get; set; }
+            public virtual IEnumerable<IdentityExternalLogin> Logins { private get; set; }
+            public virtual IEnumerable<IdentityClaim> Claims { private get; set; }
 
-            public T Combine()
+            public virtual T Combine()
             {
                 var output = User;
                 if (Logins != null)
@@ -71,7 +71,7 @@ namespace Neo4j.AspNetCore.Identity
             }
         }
 
-        private static ICypherFluentQuery AddClaims(ICypherFluentQuery query, IList<IdentityClaim> claims)
+        protected static ICypherFluentQuery AddClaims(ICypherFluentQuery query, IList<IdentityClaim> claims)
         {
             if ((claims == null) || (claims.Count == 0))
                 return query;
@@ -89,7 +89,7 @@ namespace Neo4j.AspNetCore.Identity
             return query;
         }
 
-        private static ICypherFluentQuery AddLogins(ICypherFluentQuery query, IList<IdentityExternalLogin> logins)
+        protected static ICypherFluentQuery AddLogins(ICypherFluentQuery query, IList<IdentityExternalLogin> logins)
         {
             if ((logins == null) || (logins.Count == 0))
                 return query;
@@ -106,7 +106,7 @@ namespace Neo4j.AspNetCore.Identity
             return query;
         }
 
-        private static ICypherFluentQuery AddRoles(ICypherFluentQuery query, IList<string> roles, string userId)
+        protected static ICypherFluentQuery AddRoles(ICypherFluentQuery query, IList<string> roles, string userId)
         {
             if ((roles == null) || (roles.Count == 0))
                 return query;
@@ -126,19 +126,19 @@ namespace Neo4j.AspNetCore.Identity
             return query;
         }
 
-        private ICypherFluentQuery UserMatch(TUser user)
+        protected virtual ICypherFluentQuery UserMatch(TUser user)
         {
             return UserMatch(user.Id);
         }
 
-        private ICypherFluentQuery UserMatch(string userId)
+        protected virtual ICypherFluentQuery UserMatch(string userId)
         {
             return Database.Cypher
                 .Match(p => p.Pattern<TUser>("u").Constrain(u => u.Id == userId));
         }
 
         #region IUserStore
-        public async Task<IdentityResult> CreateAsync(TUser user, CancellationToken cancellationToken)
+        public virtual async Task<IdentityResult> CreateAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -155,7 +155,7 @@ namespace Neo4j.AspNetCore.Identity
             return IdentityResult.Success;
         }
 
-        public async Task<IdentityResult> DeleteAsync(TUser user, CancellationToken cancellationToken)
+        public virtual async Task<IdentityResult> DeleteAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -172,7 +172,7 @@ namespace Neo4j.AspNetCore.Identity
             return IdentityResult.Success;
         }
 
-        public async Task<TUser> FindByIdAsync(string userId, CancellationToken cancellationToken)
+        public virtual async Task<TUser> FindByIdAsync(string userId, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -193,7 +193,7 @@ namespace Neo4j.AspNetCore.Identity
             return ret;
         }
 
-        public async Task<TUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
+        public virtual async Task<TUser> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -215,7 +215,7 @@ namespace Neo4j.AspNetCore.Identity
             return user;
         }
 
-        public Task<string> GetNormalizedUserNameAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<string> GetNormalizedUserNameAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -225,7 +225,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.NormalizedUserName);
         }
 
-        public Task<string> GetUserIdAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<string> GetUserIdAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -235,7 +235,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.Id);
         }
 
-        public Task<string> GetUserNameAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<string> GetUserNameAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -245,7 +245,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.UserName);
         }
 
-        public async Task SetNormalizedUserNameAsync(TUser user, string normalizedName, CancellationToken cancellationToken)
+        public virtual async Task SetNormalizedUserNameAsync(TUser user, string normalizedName, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -255,7 +255,7 @@ namespace Neo4j.AspNetCore.Identity
             user.SetNormalizedUserName(normalizedName);
         }
 
-        public Task SetUserNameAsync(TUser user, string userName, CancellationToken cancellationToken)
+        public virtual Task SetUserNameAsync(TUser user, string userName, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -267,7 +267,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public async Task<IdentityResult> UpdateAsync(TUser user, CancellationToken cancellationToken)
+        public virtual async Task<IdentityResult> UpdateAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -323,7 +323,7 @@ namespace Neo4j.AspNetCore.Identity
         #endregion
 
         #region IDisposable Support
-        private bool _disposed = false; // To detect redundant calls
+        protected bool _disposed = false; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
@@ -348,7 +348,7 @@ namespace Neo4j.AspNetCore.Identity
         // }
 
         // This code added to correctly implement the disposable pattern.
-        public void Dispose()
+        public virtual void Dispose()
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
@@ -362,7 +362,7 @@ namespace Neo4j.AspNetCore.Identity
         /// <exception>
         ///     <cref>System.ObjectDisposedException</cref>
         /// </exception>
-        private void ThrowIfDisposed()
+        protected virtual void ThrowIfDisposed()
         {
             if (_disposed)
                 throw new ObjectDisposedException(GetType().Name);
@@ -370,7 +370,7 @@ namespace Neo4j.AspNetCore.Identity
         #endregion
 
         #region IUserLoginStore
-        public Task AddLoginAsync(TUser user, UserLoginInfo login, CancellationToken cancellationToken)
+        public virtual Task AddLoginAsync(TUser user, UserLoginInfo login, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -388,7 +388,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public Task RemoveLoginAsync(TUser user, string loginProvider, string providerKey, CancellationToken cancellationToken)
+        public virtual Task RemoveLoginAsync(TUser user, string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -404,7 +404,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public Task<IList<UserLoginInfo>> GetLoginsAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<IList<UserLoginInfo>> GetLoginsAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -416,7 +416,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(logins);
         }
 
-        public async Task<TUser> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
+        public virtual async Task<TUser> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -443,7 +443,7 @@ namespace Neo4j.AspNetCore.Identity
         #endregion
 
         #region IUserRoleStore
-        public async Task AddToRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
+        public virtual async Task AddToRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -456,7 +456,7 @@ namespace Neo4j.AspNetCore.Identity
             }
         }
 
-        public Task RemoveFromRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
+        public virtual Task RemoveFromRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
             if (user == null)
@@ -470,7 +470,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public Task<IList<string>> GetRolesAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<IList<string>> GetRolesAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -480,7 +480,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult<IList<string>>(user.Roles.ToList());
         }
 
-        public Task<bool> IsInRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
+        public virtual Task<bool> IsInRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -490,7 +490,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.Roles.Contains(roleName, StringComparer.CurrentCultureIgnoreCase));
         }
 
-        public async Task<IList<TUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
+        public virtual async Task<IList<TUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -517,7 +517,7 @@ namespace Neo4j.AspNetCore.Identity
         #endregion
 
         #region IUserClaimStore
-        public Task<IList<Claim>> GetClaimsAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<IList<Claim>> GetClaimsAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -529,7 +529,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(result);
         }
 
-        public Task AddClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
+        public virtual Task AddClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -544,7 +544,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public Task ReplaceClaimAsync(TUser user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
+        public virtual Task ReplaceClaimAsync(TUser user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -562,7 +562,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public Task RemoveClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
+        public virtual Task RemoveClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -577,7 +577,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public async Task<IList<TUser>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
+        public virtual async Task<IList<TUser>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -602,7 +602,7 @@ namespace Neo4j.AspNetCore.Identity
         #endregion
 
         #region IUserPasswordStore
-        public Task SetPasswordHashAsync(TUser user, string passwordHash, CancellationToken cancellationToken)
+        public virtual Task SetPasswordHashAsync(TUser user, string passwordHash, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -614,7 +614,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public Task<string> GetPasswordHashAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<string> GetPasswordHashAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -624,7 +624,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.PasswordHash);
         }
 
-        public Task<bool> HasPasswordAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<bool> HasPasswordAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -636,7 +636,7 @@ namespace Neo4j.AspNetCore.Identity
         #endregion
 
         #region IUserSecurityStampStore
-        public Task SetSecurityStampAsync(TUser user, string stamp, CancellationToken cancellationToken)
+        public virtual Task SetSecurityStampAsync(TUser user, string stamp, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -648,7 +648,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public Task<string> GetSecurityStampAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<string> GetSecurityStampAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -660,7 +660,7 @@ namespace Neo4j.AspNetCore.Identity
         #endregion
 
         #region IUserEmailStore
-        public Task SetEmailAsync(TUser user, string email, CancellationToken cancellationToken)
+        public virtual Task SetEmailAsync(TUser user, string email, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -672,7 +672,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public Task<string> GetEmailAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<string> GetEmailAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -682,7 +682,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.Email?.Value);
         }
 
-        public Task<bool> GetEmailConfirmedAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<bool> GetEmailConfirmedAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -692,7 +692,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.Email?.IsConfirmed() == true);
         }
 
-        public Task SetEmailConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
+        public virtual Task SetEmailConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -707,7 +707,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public async Task<TUser> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
+        public virtual async Task<TUser> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -729,7 +729,7 @@ namespace Neo4j.AspNetCore.Identity
             return user;
         }
 
-        public Task<string> GetNormalizedEmailAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<string> GetNormalizedEmailAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -739,7 +739,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.Email?.NormalizedValue);
         }
 
-        public Task SetNormalizedEmailAsync(TUser user, string normalizedEmail, CancellationToken cancellationToken)
+        public virtual Task SetNormalizedEmailAsync(TUser user, string normalizedEmail, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -753,7 +753,7 @@ namespace Neo4j.AspNetCore.Identity
         #endregion
 
         #region IUserLockoutStore
-        public Task<DateTimeOffset?> GetLockoutEndDateAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<DateTimeOffset?> GetLockoutEndDateAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -763,7 +763,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.LockoutEndDate?.Instant);
         }
 
-        public Task SetLockoutEndDateAsync(TUser user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
+        public virtual Task SetLockoutEndDateAsync(TUser user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -775,7 +775,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public Task<int> IncrementAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<int> IncrementAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -787,7 +787,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.AccessFailedCount);
         }
 
-        public Task ResetAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task ResetAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -799,7 +799,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public Task<int> GetAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<int> GetAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -809,7 +809,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.AccessFailedCount);
         }
 
-        public Task<bool> GetLockoutEnabledAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<bool> GetLockoutEnabledAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -819,7 +819,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.IsLockoutEnabled);
         }
 
-        public Task SetLockoutEnabledAsync(TUser user, bool enabled, CancellationToken cancellationToken)
+        public virtual Task SetLockoutEnabledAsync(TUser user, bool enabled, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -837,7 +837,7 @@ namespace Neo4j.AspNetCore.Identity
         #endregion
 
         #region IUserPhoneNumberStore
-        public Task SetPhoneNumberAsync(TUser user, string phoneNumber, CancellationToken cancellationToken)
+        public virtual Task SetPhoneNumberAsync(TUser user, string phoneNumber, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -849,7 +849,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public Task<string> GetPhoneNumberAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<string> GetPhoneNumberAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -859,7 +859,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.PhoneNumber?.Value);
         }
 
-        public Task<bool> GetPhoneNumberConfirmedAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<bool> GetPhoneNumberConfirmedAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -869,7 +869,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.PhoneNumber?.IsConfirmed() == true);
         }
 
-        public Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
+        public virtual Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -887,7 +887,7 @@ namespace Neo4j.AspNetCore.Identity
         #endregion
 
         #region IUserTwoFactorStore
-        public Task SetTwoFactorEnabledAsync(TUser user, bool enabled, CancellationToken cancellationToken)
+        public virtual Task SetTwoFactorEnabledAsync(TUser user, bool enabled, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -902,7 +902,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(0);
         }
 
-        public Task<bool> GetTwoFactorEnabledAsync(TUser user, CancellationToken cancellationToken)
+        public virtual Task<bool> GetTwoFactorEnabledAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 

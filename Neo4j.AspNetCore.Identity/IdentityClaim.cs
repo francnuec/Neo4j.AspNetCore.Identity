@@ -35,13 +35,13 @@ namespace Neo4j.AspNetCore.Identity
         }
 
         [JsonProperty]
-        public string Type { get; protected internal set; }
+        public virtual string Type { get; protected internal set; }
 
         [JsonProperty]
-        public string Value { get; protected internal set; }
+        public virtual string Value { get; protected internal set; }
 
         [JsonProperty]
-        public Occurrence CreatedOn { get; private set; }
+        public virtual Occurrence CreatedOn { get; private set; }
 
         public Claim ToSecurityClaim()
         {

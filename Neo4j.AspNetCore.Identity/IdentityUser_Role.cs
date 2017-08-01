@@ -21,17 +21,17 @@ namespace Neo4j.AspNetCore.Identity
 
         [Key]
         [Column(Order = 1)]
-        public string RoleId { get; set; }
+        public virtual string RoleId { get; set; }
 
-        public IdentityRole Role { get; set; }
+        public virtual IdentityRole Role { get; set; }
 
         [Key]
         [Column(Order = 2)]
-        public string UserId { get; set; }
+        public virtual string UserId { get; set; }
 
-        public IdentityUser User { get; set; }
+        public virtual IdentityUser User { get; set; }
 
         [JsonProperty]
-        public Occurrence CreatedOn { get; private set; }
+        public virtual Occurrence CreatedOn { get; private set; }
     }
 }

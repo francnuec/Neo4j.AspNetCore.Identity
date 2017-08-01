@@ -22,7 +22,7 @@ namespace Neo4j.AspNetCore.Identity
         /// <summary>
         ///     The _disposed
         /// </summary>
-        private bool _disposed;
+        protected bool _disposed;
 
         static RoleStore()
         {
@@ -39,13 +39,13 @@ namespace Neo4j.AspNetCore.Identity
             Neo4jAnnotations.AddEntityType(typeof(TRole));
         }
 
-        internal class FindRoleResult<T>
+        protected internal class FindRoleResult<T>
             where T : IdentityRole
         {
-            public T Role { private get; set; }
-            public IEnumerable<IdentityClaim> Claims { private get; set; }
+            public virtual T Role { private get; set; }
+            public virtual IEnumerable<IdentityClaim> Claims { private get; set; }
 
-            public T Combine()
+            public virtual T Combine()
             {
                 var output = Role;
 
@@ -61,7 +61,7 @@ namespace Neo4j.AspNetCore.Identity
             }
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             _disposed = true;
         }
@@ -81,7 +81,7 @@ namespace Neo4j.AspNetCore.Identity
             return IdentityResult.Success;
         }
 
-        private static ICypherFluentQuery AddClaims(ICypherFluentQuery query, IList<IdentityClaim> claims)
+        protected static ICypherFluentQuery AddClaims(ICypherFluentQuery query, IList<IdentityClaim> claims)
         {
             if ((claims == null) || (claims.Count == 0))
                 return query;
@@ -99,12 +99,12 @@ namespace Neo4j.AspNetCore.Identity
             return query;
         }
 
-        private ICypherFluentQuery RoleMatch(TRole role)
+        protected virtual ICypherFluentQuery RoleMatch(TRole role)
         {
             return RoleMatch(role.Id);
         }
 
-        private ICypherFluentQuery RoleMatch(string roleId)
+        protected virtual ICypherFluentQuery RoleMatch(string roleId)
         {
             return Database.Cypher
                 .Match(p => p.Pattern<TRole>("r").Constrain(r => r.Id == roleId));
@@ -170,13 +170,13 @@ namespace Neo4j.AspNetCore.Identity
         /// <exception>
         ///     <cref>System.ObjectDisposedException</cref>
         /// </exception>
-        private void ThrowIfDisposed()
+        protected virtual void ThrowIfDisposed()
         {
             if (_disposed)
                 throw new ObjectDisposedException(GetType().Name);
         }
 
-        public Task<string> GetRoleIdAsync(TRole role, CancellationToken cancellationToken = new CancellationToken())
+        public virtual Task<string> GetRoleIdAsync(TRole role, CancellationToken cancellationToken = new CancellationToken())
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -188,7 +188,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(role.Id);
         }
 
-        public Task<string> GetRoleNameAsync(TRole role, CancellationToken cancellationToken = new CancellationToken())
+        public virtual Task<string> GetRoleNameAsync(TRole role, CancellationToken cancellationToken = new CancellationToken())
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -200,7 +200,7 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(role.Name);
         }
 
-        public Task SetRoleNameAsync(TRole role, string roleName, CancellationToken cancellationToken = new CancellationToken())
+        public virtual Task SetRoleNameAsync(TRole role, string roleName, CancellationToken cancellationToken = new CancellationToken())
         {
             cancellationToken.ThrowIfCancellationRequested();
 

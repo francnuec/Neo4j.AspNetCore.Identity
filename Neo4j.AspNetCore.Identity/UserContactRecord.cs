@@ -20,22 +20,22 @@ namespace Neo4j.AspNetCore.Identity
         }
 
         [JsonProperty]
-        public string Value { get; protected set; }
+        public virtual string Value { get; protected set; }
 
         [JsonProperty]
-        public ConfirmationOccurrence ConfirmationRecord { get; protected set; }
+        public virtual ConfirmationOccurrence ConfirmationRecord { get; protected set; }
 
-        public bool IsConfirmed()
+        public virtual bool IsConfirmed()
         {
             return ConfirmationRecord != null && ConfirmationRecord.Instant != null;
         }
 
-        public void SetConfirmed()
+        public virtual void SetConfirmed()
         {
             SetConfirmed(new ConfirmationOccurrence());
         }
 
-        public void SetConfirmed(ConfirmationOccurrence confirmationRecord)
+        public virtual void SetConfirmed(ConfirmationOccurrence confirmationRecord)
         {
             if (ConfirmationRecord == null || ConfirmationRecord.Instant == null)
             {
@@ -43,7 +43,7 @@ namespace Neo4j.AspNetCore.Identity
             }
         }
 
-        public void SetUnconfirmed()
+        public virtual void SetUnconfirmed()
         {
             ConfirmationRecord = new ConfirmationOccurrence(null);
         }

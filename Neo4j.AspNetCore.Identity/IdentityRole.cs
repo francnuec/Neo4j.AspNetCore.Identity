@@ -31,22 +31,22 @@ namespace Neo4j.AspNetCore.Identity
         /// <summary>
         /// Role Id
         /// </summary>
-        public string Id { get; protected internal set; }
+        public virtual string Id { get; protected internal set; }
 
         [JsonProperty]
         /// <summary>
         /// Role name
         /// </summary>
-        public string Name { get; protected internal set; }
+        public virtual string Name { get; protected internal set; }
 
         [JsonProperty]
-        public string NormalizedName { get; protected internal set; }
+        public virtual string NormalizedName { get; protected internal set; }
 
         [JsonProperty]
         /// <summary>
         /// A random value that should change whenever a role is persisted to the store
         /// </summary>
-        public string ConcurrencyStamp { get; protected internal set; } = Guid.NewGuid().ToString();
+        public virtual string ConcurrencyStamp { get; protected internal set; } = Guid.NewGuid().ToString();
 
         /// <summary>
         /// Collection of claims in the role
@@ -55,13 +55,13 @@ namespace Neo4j.AspNetCore.Identity
         public IEnumerable<IdentityClaim> Claims { get; protected internal set; } = new List<IdentityClaim>();
 
         [JsonIgnore]
-        internal List<IdentityClaim> RemovedClaims { get; } = new List<IdentityClaim>();
+        protected internal List<IdentityClaim> RemovedClaims { get; } = new List<IdentityClaim>();
 
         [JsonProperty]
-        public Occurrence CreatedOn { get; private set; }
+        public virtual Occurrence CreatedOn { get; private set; }
 
         [InverseProperty("Role")]
-        public IEnumerable<IdentityUser_Role> Users { get; }
+        public virtual IEnumerable<IdentityUser_Role> Users { get; }
 
         public virtual void AddClaim(Claim claim)
         {

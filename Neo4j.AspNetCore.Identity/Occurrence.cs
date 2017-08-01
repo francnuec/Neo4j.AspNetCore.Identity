@@ -17,6 +17,6 @@ namespace Neo4j.AspNetCore.Identity
         }
 
         [JsonProperty]
-        public DateTimeOffset? Instant { get; private set; }
+        public virtual DateTimeOffset? Instant { get; private set; }
     }
 }

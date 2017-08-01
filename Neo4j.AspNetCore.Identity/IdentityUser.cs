@@ -20,7 +20,7 @@ namespace Neo4j.AspNetCore.Identity
             Id = GenerateId();
 
             CreatedOn = new Occurrence();
-            DeletedOn = new Occurrence(null);
+            //DeletedOn = new Occurrence(null);
             LockoutEndDate = new FutureOccurrence(null);
             Email = new UserEmail();
             PhoneNumber = new UserPhoneNumber();
@@ -52,31 +52,31 @@ namespace Neo4j.AspNetCore.Identity
         }
 
         [JsonProperty]
-        public string Id { get; protected set; }
+        public virtual string Id { get; protected set; }
 
         [JsonProperty]
-        public string UserName { get; protected set; }
+        public virtual string UserName { get; protected set; }
 
         [JsonProperty]
-        public string NormalizedUserName { get; protected set; }
+        public virtual string NormalizedUserName { get; protected set; }
 
         [JsonProperty]
-        public UserEmail Email { get; protected set; }
+        public virtual UserEmail Email { get; protected set; }
 
         [JsonProperty]
-        public UserPhoneNumber PhoneNumber { get; protected set; }
+        public virtual UserPhoneNumber PhoneNumber { get; protected set; }
 
         [JsonProperty]
-        public string PasswordHash { get; protected set; }
+        public virtual string PasswordHash { get; protected set; }
 
         [JsonProperty]
-        public string SecurityStamp { get; protected set; }
+        public virtual string SecurityStamp { get; protected set; }
 
         [JsonProperty]
-        public bool IsTwoFactorEnabled { get; protected set; }
+        public virtual bool IsTwoFactorEnabled { get; protected set; }
 
         [Column(Relationship.Claims)]
-        public IEnumerable<IdentityClaim> Claims
+        public virtual IEnumerable<IdentityClaim> Claims
         {
             get
             {
@@ -93,7 +93,7 @@ namespace Neo4j.AspNetCore.Identity
         }
 
         [Column(Relationship.Logins)]
-        public IEnumerable<IdentityExternalLogin> Logins
+        public virtual IEnumerable<IdentityExternalLogin> Logins
         {
             get
             {
@@ -110,7 +110,7 @@ namespace Neo4j.AspNetCore.Identity
         }
 
         [JsonProperty]
-        public IEnumerable<string> Roles
+        public virtual IEnumerable<string> Roles
         {
             get
             {
@@ -126,25 +126,25 @@ namespace Neo4j.AspNetCore.Identity
         }
 
         [JsonIgnore]
-        internal List<object> RemovedObjects { get; } = new List<object>();
+        protected internal List<object> RemovedObjects { get; } = new List<object>();
 
         [InverseProperty("User")]
-        public IEnumerable<IdentityUser_Role> RolesRelationship { get; protected set; }
+        public virtual IEnumerable<IdentityUser_Role> RolesRelationship { get; protected set; }
 
         [JsonProperty]
-        public int AccessFailedCount { get; protected set; }
+        public virtual int AccessFailedCount { get; protected set; }
 
         [JsonProperty]
-        public bool IsLockoutEnabled { get; protected set; }
+        public virtual bool IsLockoutEnabled { get; protected set; }
 
         [JsonProperty]
-        public FutureOccurrence LockoutEndDate { get; protected set; }
+        public virtual FutureOccurrence LockoutEndDate { get; protected set; }
 
         [JsonProperty]
-        public Occurrence CreatedOn { get; protected set; }
+        public virtual Occurrence CreatedOn { get; protected set; }
 
-        [JsonProperty]
-        public Occurrence DeletedOn { get; protected set; }
+        //[JsonProperty]
+        //public virtual Occurrence DeletedOn { get; protected set; }
 
 
         public virtual void EnableTwoFactorAuthentication()
@@ -302,15 +302,15 @@ namespace Neo4j.AspNetCore.Identity
             RemovedObjects.Add(role);
         }
 
-        public void Delete()
-        {
-            if (DeletedOn != null && DeletedOn.Instant == null)
-            {
-                throw new InvalidOperationException($"User '{Id}' has already been deleted.");
-            }
+        //public void Delete()
+        //{
+        //    if (DeletedOn != null && DeletedOn.Instant == null)
+        //    {
+        //        throw new InvalidOperationException($"User '{Id}' has already been deleted.");
+        //    }
 
-            DeletedOn = new Occurrence();
-        }
+        //    DeletedOn = new Occurrence();
+        //}
 
         private static string GenerateId()
         {
