@@ -1,22 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.4</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>francnuec</Authors>
     <Company>francnuec</Company>
     <Description>Neo4j database ASP.NET Identity Provider based on the Neo4jClient, and Neo4jClient.DataAnnotations projects.</Description>
     <PackageLicenseUrl>https://github.com/francnuec/Neo4jClient.AspNetCore.Identity/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/francnuec/Neo4jClient.AspNetCore.Identity</PackageProjectUrl>
     <PackageTags>identity userstore nosql cypher neo4j entity</PackageTags>
-    <PackageReleaseNotes>Visit project site for usage and instructions.</PackageReleaseNotes>
+    <PackageReleaseNotes>Visit project site for usage and instructions.
+
+*Targeted .NET Standard 2.0.
+*NOTE: This version will only work on .net standard 2.0 and above because an incompatibility exists between .net standard 1.* and 2.0.</PackageReleaseNotes>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <Version>1.0.1</Version>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="1.1.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.0.0" />
     <PackageReference Include="Neo4jClient" Version="2.0.0.9" />
-    <PackageReference Include="Neo4jClient.DataAnnotations" Version="1.0.2" />
+    <PackageReference Include="Neo4jClient.DataAnnotations" Version="1.0.6" />
   </ItemGroup>
 
 </Project>

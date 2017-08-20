@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Security.Claims;
 using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
 
 namespace Neo4j.AspNetCore.Identity
 {

@@ -18,6 +18,7 @@ using Neo4jClient;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Neo4jClient.DataAnnotations;
 using Neo4j.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace Neo4j.AspNetCore.Identity.Sample
 {
@@ -63,9 +64,10 @@ namespace Neo4j.AspNetCore.Identity.Sample
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
-                var dataProtectionPath = Path.Combine(HostingEnvironment.WebRootPath, "identity-artifacts");
-                options.Cookies.ApplicationCookie.AuthenticationScheme = "ApplicationCookie";
-                options.Cookies.ApplicationCookie.DataProtectionProvider = DataProtectionProvider.Create(dataProtectionPath);
+                //var dataProtectionPath = Path.Combine(HostingEnvironment.WebRootPath, "identity-artifacts");
+                //options.Cookies.ApplicationCookie.AuthenticationScheme = "ApplicationCookie";
+                //options.Cookies.ApplicationCookie.DataProtectionProvider = DataProtectionProvider.Create(dataProtectionPath);
+
                 options.Lockout.AllowedForNewUsers = true;
 
                 // User settings
@@ -75,12 +77,14 @@ namespace Neo4j.AspNetCore.Identity.Sample
             .AddRoleStore<RoleStore<IdentityRole>>()
             .AddDefaultTokenProviders();
 
-            // Services used by identity
-            services.AddAuthentication(options =>
-            {
-                // This is the Default value for ExternalCookieAuthenticationScheme
-                options.SignInScheme = new IdentityCookieOptions().ExternalCookieAuthenticationScheme;
-            });
+
+            //// Services used by identity
+            ////services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme);
+            //services.AddAuthentication(options =>
+            //{
+            //    // This is the Default value for ExternalCookieAuthenticationScheme
+            //    options.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme; //new IdentityCookieOptions().ExternalCookieAuthenticationScheme;
+            //});
 
             // Hosting doesn't add IHttpContextAccessor by default
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -114,7 +118,7 @@ namespace Neo4j.AspNetCore.Identity.Sample
 
             app.UseStaticFiles();
 
-            app.UseIdentity();
+            app.UseAuthentication();
 
             // Add external authentication middleware below. To configure them please see https://go.microsoft.com/fwlink/?LinkID=532715
 

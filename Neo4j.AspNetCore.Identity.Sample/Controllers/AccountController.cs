@@ -13,6 +13,7 @@ using Neo4j.AspNetCore.Identity.Sample.Models;
 using Neo4j.AspNetCore.Identity.Sample.Models.AccountViewModels;
 using Neo4j.AspNetCore.Identity.Sample.Services;
 using Neo4j.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication;
 
 namespace Neo4j.AspNetCore.Identity.Sample.Controllers
 {
@@ -25,13 +26,11 @@ namespace Neo4j.AspNetCore.Identity.Sample.Controllers
         private readonly IEmailSender _emailSender;
         private readonly ISmsSender _smsSender;
         private readonly ILogger _logger;
-        private readonly string _externalCookieScheme;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             SignInManager<ApplicationUser> signInManager,
-            IOptions<IdentityCookieOptions> identityCookieOptions,
             IEmailSender emailSender,
             ISmsSender smsSender,
             ILoggerFactory loggerFactory)
@@ -39,7 +38,6 @@ namespace Neo4j.AspNetCore.Identity.Sample.Controllers
             _userManager = userManager;
             _roleManager = roleManager;
             _signInManager = signInManager;
-            _externalCookieScheme = identityCookieOptions.Value.ExternalCookieAuthenticationScheme;
             _emailSender = emailSender;
             _smsSender = smsSender;
             _logger = loggerFactory.CreateLogger<AccountController>();
@@ -52,7 +50,7 @@ namespace Neo4j.AspNetCore.Identity.Sample.Controllers
         public async Task<IActionResult> Login(string returnUrl = null)
         {
             // Clear the existing external cookie to ensure a clean login process
-            await HttpContext.Authentication.SignOutAsync(_externalCookieScheme);
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
             ViewData["ReturnUrl"] = returnUrl;
             return View();
