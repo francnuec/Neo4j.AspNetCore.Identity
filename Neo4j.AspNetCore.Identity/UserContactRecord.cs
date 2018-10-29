@@ -16,7 +16,7 @@ namespace Neo4j.AspNetCore.Identity
         protected UserContactRecord(string value)
             : this()
         {
-            Value = value ?? throw new ArgumentNullException(nameof(value));
+            Value = value; //?? throw new ArgumentNullException(nameof(value));
         }
 
         [JsonProperty]
@@ -50,7 +50,7 @@ namespace Neo4j.AspNetCore.Identity
 
         public bool Equals(UserEmail other)
         {
-            return other.Value.Equals(Value);
+            return other?.Value?.Equals(Value) ?? ReferenceEquals(this, other);
         }
     }
 }

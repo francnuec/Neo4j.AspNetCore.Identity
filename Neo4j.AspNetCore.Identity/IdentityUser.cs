@@ -186,12 +186,7 @@ namespace Neo4j.AspNetCore.Identity
 
         public virtual void SetNormalizedUserName(string normalizedUserName)
         {
-            if (normalizedUserName == null)
-            {
-                throw new ArgumentNullException(nameof(normalizedUserName));
-            }
-
-            NormalizedUserName = normalizedUserName;
+            NormalizedUserName = normalizedUserName ?? throw new ArgumentNullException(nameof(normalizedUserName));
         }
 
         public virtual void SetPhoneNumber(string phoneNumber)

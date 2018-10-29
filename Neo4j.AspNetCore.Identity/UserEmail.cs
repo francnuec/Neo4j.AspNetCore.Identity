@@ -19,7 +19,7 @@ namespace Neo4j.AspNetCore.Identity
 
         public virtual void SetNormalizedEmail(string normalizedEmail)
         {
-            NormalizedValue = normalizedEmail ?? throw new ArgumentNullException(nameof(normalizedEmail));
+            NormalizedValue = normalizedEmail; //?? throw new ArgumentNullException(nameof(normalizedEmail));
         }
     }
 }

@@ -21,17 +21,8 @@ namespace Neo4j.AspNetCore.Identity
 
         public IdentityClaim(string type, string value)
         {
-            if (type == null)
-            {
-                throw new ArgumentNullException(nameof(type));
-            }
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            Type = type;
-            Value = value;
+            Type = type ?? throw new ArgumentNullException(nameof(type));
+            Value = value; //?? throw new ArgumentNullException(nameof(value));
         }
 
         [JsonProperty]
@@ -50,14 +41,16 @@ namespace Neo4j.AspNetCore.Identity
 
         public bool Equals(IdentityClaim other)
         {
-            return other.Type.Equals(Type)
-                && other.Value.Equals(Value);
+            return Type.Equals(other?.Type)
+                && (Value?.Equals(other?.Value) 
+                ?? (Value == null && other?.Value == null));
         }
 
         public bool Equals(Claim other)
         {
-            return other.Type.Equals(Type)
-                && other.Value.Equals(Value);
+            return Type.Equals(other?.Type)
+                && (Value?.Equals(other?.Value)
+                ?? (Value == null && other?.Value == null));
         }
     }
 }
