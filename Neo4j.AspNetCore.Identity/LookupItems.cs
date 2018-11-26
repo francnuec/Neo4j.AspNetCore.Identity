@@ -1,6 +1,7 @@
 namespace Neo4j.AspNetCore.Identity
 {
     using Neo4j.AspNetCore.Identity;
+    using Neo4jClient.DataAnnotations;
     using System;
 
     /// <summary>Consts for the Relationships used throughout Neo4j.</summary>
@@ -48,10 +49,15 @@ namespace Neo4j.AspNetCore.Identity
             typeof(UserPhoneNumber),
         };
 
-        public static void AddAll()
+        public static void AddAll(EntityService entityService)
         {
+            if (entityService == null)
+            {
+                throw new ArgumentNullException(nameof(entityService));
+            }
+
             foreach (var type in All)
-                Neo4jClient.DataAnnotations.Neo4jAnnotations.AddEntityType(type);
+                entityService.AddEntityType(type);
         }
     }
 }

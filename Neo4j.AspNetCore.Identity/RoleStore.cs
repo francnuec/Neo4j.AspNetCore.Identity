@@ -24,19 +24,13 @@ namespace Neo4j.AspNetCore.Identity
         /// </summary>
         protected bool _disposed;
 
-        static RoleStore()
-        {
-            EntityTypes.AddAll();
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="RoleStore{TRole}"/> class
         /// </summary>
         /// <param name="database">The database.</param>
-        public RoleStore(IGraphClient database)
+        public RoleStore(AnnotationsContext context) : base(context)
         {
-            Database = database;
-            Neo4jAnnotations.AddEntityType(typeof(TRole));
+            context.EntityService.AddEntityType(typeof(TRole));
         }
 
         protected internal class FindRoleResult<T>

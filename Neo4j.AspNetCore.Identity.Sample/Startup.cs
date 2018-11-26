@@ -50,8 +50,6 @@ namespace Neo4j.AspNetCore.Identity.Sample
         public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
-            Neo4jAnnotations.RegisterWithResolver();
-
             services.Configure<Neo4jDbSettings>(Configuration.GetSection("Neo4jDbSettings"));
             services.AddScoped<IGraphClient, GraphClient>(provider =>
             {
@@ -61,6 +59,8 @@ namespace Neo4j.AspNetCore.Identity.Sample
                 client.Connect();
                 return client;
             });
+
+            services.AddNeo4jAnnotations();
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {

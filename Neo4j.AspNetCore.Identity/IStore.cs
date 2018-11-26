@@ -1,12 +1,11 @@
 ﻿
 using Neo4jClient;
+using Neo4jClient.DataAnnotations;
 
 namespace Neo4j.AspNetCore.Identity
 {
-    public interface IStore
+    public interface IStore : IHaveAnnotationsContext
     {
-        IGraphClient Database { get; set; }
-        //IArangoDatabase Database { get; set; }
-        //IArangoDatabase GetDatabaseFromSqlStyle(string connectionString);
+        IGraphClient Database { get; }
     }
 }

@@ -27,18 +27,12 @@ namespace Neo4j.AspNetCore.Identity
         IUserTwoFactorStore<TUser>
         where TUser : IdentityUser
     {
-        static UserStore()
-        {
-            EntityTypes.AddAll();
-        }
-
         /// <summary>
         /// Initializes a new instance of the <see cref="UserStore{TUser}"/> class using an already initialized Neo4j GrpahClient.
         /// </summary>
-        public UserStore(IGraphClient database)
+        public UserStore(AnnotationsContext context) : base(context)
         {
-            Database = database;
-            Neo4jAnnotations.AddEntityType(typeof(TUser));
+            context.EntityService.AddEntityType(typeof(TUser));
         }
 
         protected internal class FindUserResult<T>
@@ -119,7 +113,7 @@ namespace Neo4j.AspNetCore.Identity
                     .With("u")
                     .Match(p => p.Pattern<IdentityRole>(roleVar).Constrain(r => r.NormalizedName == roles[i]))
                     .Merge(p => p.Pattern<TUser, IdentityUser_Role, IdentityRole>("u", userRoleVar, roleVar)
-                    .Constrain(null, ur => ur.RoleId == Vars.Get<IdentityRole>(roleVar).Id && ur.UserId == userId, null))
+                    .Constrain(null, ur => ur.RoleId == CypherVariables.Get<IdentityRole>(roleVar).Id && ur.UserId == userId, null))
                     .OnCreate().Set<IdentityUser_Role>(ur => ur.CreatedOn == new Occurrence(), userRoleVar);
             }
 
