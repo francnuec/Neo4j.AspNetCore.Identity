@@ -5,7 +5,7 @@
     <Authors>francnuec</Authors>
     <Company>francnuec</Company>
     <Description>Neo4j database ASP.NET Identity Provider based on the Neo4jClient, and Neo4jClient.DataAnnotations projects.</Description>
-    <PackageLicenseUrl>https://github.com/francnuec/Neo4j.AspNetCore.Identity/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicenseUrl></PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/francnuec/Neo4j.AspNetCore.Identity</PackageProjectUrl>
     <PackageTags>identity userstore nosql cypher neo4j entity</PackageTags>
     <PackageReleaseNotes>Visit project site for usage and instructions.
@@ -15,19 +15,25 @@
 *NOTE: This version will only work on .net standard 2.0 and above because an incompatibility exists between .net standard 1.* and 2.0.
 *Bug fixes.</PackageReleaseNotes>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <Version>2.1.0</Version>
-    <AssemblyVersion>2.1.0.0</AssemblyVersion>
-    <FileVersion>2.1.0.0</FileVersion>
+    <Version>2.1.1</Version>
+    <AssemblyVersion>2.1.1.0</AssemblyVersion>
+    <FileVersion>2.1.1.0</FileVersion>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.1.3" />
-    <!--<PackageReference Include="Neo4jClient" Version="3.0.1.21" />-->
+    <PackageReference Include="Neo4jClient" Version="3.0.1.21" />
+    <PackageReference Include="Neo4jClient.DataAnnotations" Version="2.1.2" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\..\..\Visual_Studio_2017\Projects\CSY\Neo4jClient.DataAnnotations\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
     <ProjectReference Include="..\..\..\Neo4jClient\Neo4jClient\Neo4jClient.csproj" />
     <ProjectReference Include="..\..\Neo4jClient.DataAnnotations\Neo4jClient.DataAnnotations\Neo4jClient.DataAnnotations.csproj" />
   </ItemGroup>
-
+  
 </Project>

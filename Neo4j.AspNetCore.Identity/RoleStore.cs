@@ -69,13 +69,13 @@ namespace Neo4j.AspNetCore.Identity
                 throw new ArgumentNullException(nameof(role));
             }
 
-            var query = Database.Cypher.Create((p) => p.Pattern<TRole>("r").Prop(() => role));
+            var query = AnnotationsContext.Cypher.Create((p) => p.Pattern<TRole>("r").Prop(() => role));
             await query.ExecuteWithoutResultsAsync();
 
             return IdentityResult.Success;
         }
 
-        protected static ICypherFluentQuery AddClaims(ICypherFluentQuery query, IList<IdentityClaim> claims)
+        protected ICypherFluentQuery AddClaims(ICypherFluentQuery query, IList<IdentityClaim> claims)
         {
             if ((claims == null) || (claims.Count == 0))
                 return query;
@@ -100,7 +100,7 @@ namespace Neo4j.AspNetCore.Identity
 
         protected virtual ICypherFluentQuery RoleMatch(string roleId)
         {
-            return Database.Cypher
+            return AnnotationsContext.Cypher
                 .Match(p => p.Pattern<TRole>("r").Constrain(r => r.Id == roleId));
         }
 
@@ -231,7 +231,7 @@ namespace Neo4j.AspNetCore.Identity
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var query = Database.Cypher
+            var query = AnnotationsContext.Cypher
                 .Match(p => p.Pattern<TRole>("r").Constrain(r => r.NormalizedName == normalizedName))
                 .OptionalMatch(p => p.Pattern((TRole r) => r.Claims, "c"))
                 .Return((r, c, l) => new FindRoleResult<TRole>
