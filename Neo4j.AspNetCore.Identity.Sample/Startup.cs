@@ -60,7 +60,7 @@ namespace Neo4j.AspNetCore.Identity.Sample
                 return client;
             });
 
-            services.AddNeo4jAnnotations();
+            services.AddNeo4jAnnotations<ApplicationContext>(); //services.AddNeo4jAnnotations();
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {

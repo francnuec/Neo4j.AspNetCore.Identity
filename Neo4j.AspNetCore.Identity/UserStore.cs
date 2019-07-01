@@ -65,7 +65,7 @@ namespace Neo4j.AspNetCore.Identity
             }
         }
 
-        protected static ICypherFluentQuery AddClaims(ICypherFluentQuery query, IList<IdentityClaim> claims)
+        protected ICypherFluentQuery AddClaims(ICypherFluentQuery query, IList<IdentityClaim> claims)
         {
             if ((claims == null) || (claims.Count == 0))
                 return query;
@@ -83,7 +83,7 @@ namespace Neo4j.AspNetCore.Identity
             return query;
         }
 
-        protected static ICypherFluentQuery AddLogins(ICypherFluentQuery query, IList<IdentityExternalLogin> logins)
+        protected ICypherFluentQuery AddLogins(ICypherFluentQuery query, IList<IdentityExternalLogin> logins)
         {
             if ((logins == null) || (logins.Count == 0))
                 return query;
@@ -100,7 +100,7 @@ namespace Neo4j.AspNetCore.Identity
             return query;
         }
 
-        protected static ICypherFluentQuery AddRoles(ICypherFluentQuery query, IList<string> roles, string userId)
+        protected ICypherFluentQuery AddRoles(ICypherFluentQuery query, IList<string> roles, string userId)
         {
             if ((roles == null) || (roles.Count == 0))
                 return query;
@@ -127,7 +127,7 @@ namespace Neo4j.AspNetCore.Identity
 
         protected virtual ICypherFluentQuery UserMatch(string userId)
         {
-            return Database.Cypher
+            return AnnotationsContext.Cypher
                 .Match(p => p.Pattern<TUser>("u").Constrain(u => u.Id == userId));
         }
 
@@ -139,12 +139,10 @@ namespace Neo4j.AspNetCore.Identity
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            var query = Database.Cypher
+            var query = AnnotationsContext.Cypher
                 .Create(p => p.Pattern<TUser>("u").Prop(() => user));
 
             await query.ExecuteWithoutResultsAsync();
-
-            //await Database.InsertAsync<TUser>(user);
 
             return IdentityResult.Success;
         }
@@ -191,7 +189,7 @@ namespace Neo4j.AspNetCore.Identity
         {
             ThrowIfDisposed();
 
-            var query = Database.Cypher
+            var query = AnnotationsContext.Cypher
                 .Match(p => p.Pattern<TUser>("u").Constrain(u => u.NormalizedUserName == normalizedUserName))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Logins, "l"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Claims, "c"))
@@ -414,7 +412,7 @@ namespace Neo4j.AspNetCore.Identity
         {
             ThrowIfDisposed();
 
-            var results = await Database.Cypher
+            var results = await AnnotationsContext.Cypher
                 .Match(p => p.Pattern<IdentityExternalLogin, TUser>("login", "u")
                 .Constrain(login => login.ProviderKey == providerKey
                     && login.LoginProvider == loginProvider))
@@ -491,7 +489,7 @@ namespace Neo4j.AspNetCore.Identity
             if (string.IsNullOrEmpty(roleName))
                 throw new ArgumentNullException(nameof(roleName));
 
-            var query = Database.Cypher
+            var query = AnnotationsContext.Cypher
                 .Match(p => p.Pattern((TUser u) => u.RolesRelationship, rr => rr.Role, "r")
                 .Constrain(null, null, r => r.NormalizedName == roleName))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Logins, "l"))
@@ -578,7 +576,7 @@ namespace Neo4j.AspNetCore.Identity
             if (claim == null)
                 throw new ArgumentNullException(nameof(claim));
 
-            var results = await Database.Cypher
+            var results = await AnnotationsContext.Cypher
                 .Match(p => p.Pattern<IdentityClaim, TUser>("c", "u"))
                 .Where((IdentityClaim c) => c.Type == claim.Type)
                 .AndWhere((IdentityClaim c) => c.Value == claim.Value)
@@ -705,7 +703,7 @@ namespace Neo4j.AspNetCore.Identity
         {
             ThrowIfDisposed();
 
-            var query = Database.Cypher
+            var query = AnnotationsContext.Cypher
                 .Match(p => p.Pattern<TUser>("u").Constrain(u => u.Email.NormalizedValue == normalizedEmail))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Logins, "l"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Claims, "c"))

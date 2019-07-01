@@ -14,12 +14,14 @@ using Neo4j.AspNetCore.Identity.Sample.Models.AccountViewModels;
 using Neo4j.AspNetCore.Identity.Sample.Services;
 using Neo4j.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication;
+using Neo4jClient.DataAnnotations;
 
 namespace Neo4j.AspNetCore.Identity.Sample.Controllers
 {
     [Authorize]
     public class AccountController : Controller
     {
+        private readonly AnnotationsContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
@@ -28,6 +30,7 @@ namespace Neo4j.AspNetCore.Identity.Sample.Controllers
         private readonly ILogger _logger;
 
         public AccountController(
+            AnnotationsContext context, //we can get the context this way if needed (although, we do not need it in this controller)
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
             SignInManager<ApplicationUser> signInManager,
@@ -35,6 +38,7 @@ namespace Neo4j.AspNetCore.Identity.Sample.Controllers
             ISmsSender smsSender,
             ILoggerFactory loggerFactory)
         {
+            _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _signInManager = signInManager;
