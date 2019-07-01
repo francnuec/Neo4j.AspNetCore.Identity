@@ -15,9 +15,9 @@
 *NOTE: This version will only work on .net standard 2.0 and above because an incompatibility exists between .net standard 1.* and 2.0.
 *Bug fixes.</PackageReleaseNotes>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <Version>2.1.1</Version>
-    <AssemblyVersion>2.1.1.0</AssemblyVersion>
-    <FileVersion>2.1.1.0</FileVersion>
+    <Version>2.1.2</Version>
+    <AssemblyVersion>2.1.2.0</AssemblyVersion>
+    <FileVersion>2.1.2.0</FileVersion>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
@@ -28,12 +28,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\..\Visual_Studio_2017\Projects\CSY\Neo4jClient.DataAnnotations\LICENSE">
+    <None Include="..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <ProjectReference Include="..\..\..\Neo4jClient\Neo4jClient\Neo4jClient.csproj" />
-    <ProjectReference Include="..\..\Neo4jClient.DataAnnotations\Neo4jClient.DataAnnotations\Neo4jClient.DataAnnotations.csproj" />
+    <!--<ProjectReference Include="..\..\..\Neo4jClient\Neo4jClient\Neo4jClient.csproj" />-->
+    <!--<ProjectReference Include="..\..\Neo4jClient.DataAnnotations\Neo4jClient.DataAnnotations\Neo4jClient.DataAnnotations.csproj" />-->
   </ItemGroup>
   
 </Project>
