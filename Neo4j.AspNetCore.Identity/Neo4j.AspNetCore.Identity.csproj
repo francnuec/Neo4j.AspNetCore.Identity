@@ -22,10 +22,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.1.3" />
-    <PackageReference Include="Neo4jClient" Version="3.0.1.21" />
+    <!--<PackageReference Include="Neo4jClient" Version="3.0.1.21" />-->
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Neo4jClient\Neo4jClient\Neo4jClient.csproj" />
     <ProjectReference Include="..\..\Neo4jClient.DataAnnotations\Neo4jClient.DataAnnotations\Neo4jClient.DataAnnotations.csproj" />
   </ItemGroup>
 
