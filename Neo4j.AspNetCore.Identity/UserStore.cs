@@ -272,6 +272,8 @@ namespace Neo4j.AspNetCore.Identity
             //check if user has objects that were removed
             if (user.RemovedObjects.Count > 0)
             {
+                // with user u
+                query = query.With("u");
                 //remove each one from db
                 var logins = user.RemovedObjects.OfType<IdentityExternalLogin>().ToList();
                 var existingCount = user.Logins?.Count() ?? 0;
