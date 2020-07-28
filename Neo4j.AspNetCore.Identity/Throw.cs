@@ -1,7 +1,7 @@
+using System;
+
 namespace Neo4j.AspNetCore.Identity
 {
-    using System;
-
     /// <summary>
     ///     Static helper class to throw a new <see cref="Exception" />.
     /// </summary>
@@ -22,13 +22,17 @@ namespace Neo4j.AspNetCore.Identity
                 If(obj, parameterName, t => t == null, string.Format("{0} can't be null", parameterName));
             }
 
-            /// <summary>Throws an <see cref="System.ArgumentException" /> if the <paramref name="s" /> given is <c>null</c> or whitespace.</summary>
+            /// <summary>
+            ///     Throws an <see cref="System.ArgumentException" /> if the <paramref name="s" /> given is <c>null</c> or
+            ///     whitespace.
+            /// </summary>
             /// <param name="s">The string to check.</param>
             /// <param name="parameterName">The name of the parameter the <paramref name="s" /> was in.</param>
             /// <exception cref="System.ArgumentException">Thrown if the <paramref name="s" /> given is <c>null</c> or whitespace.</exception>
             public static void IfNullOrWhiteSpace(string s, string parameterName)
             {
-                If(s, parameterName, string.IsNullOrWhiteSpace, string.Format("{0} can't be null or whitespace", parameterName));
+                If(s, parameterName, string.IsNullOrWhiteSpace,
+                    string.Format("{0} can't be null or whitespace", parameterName));
             }
 
             private static void If<T>(T obj, string parameterName, Func<T, bool> func, string message)

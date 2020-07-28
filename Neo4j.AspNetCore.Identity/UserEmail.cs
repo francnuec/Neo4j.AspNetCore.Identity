@@ -1,6 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Neo4j.AspNetCore.Identity
 {
@@ -8,14 +7,15 @@ namespace Neo4j.AspNetCore.Identity
     public class UserEmail : UserContactRecord
     {
         [JsonConstructor]
-        protected internal UserEmail() : base() { }
+        protected internal UserEmail()
+        {
+        }
 
         public UserEmail(string email) : base(email)
         {
         }
 
-        [JsonProperty]
-        public virtual string NormalizedValue { get; private set; }
+        [JsonProperty] public virtual string NormalizedValue { get; private set; }
 
         public virtual void SetNormalizedEmail(string normalizedEmail)
         {

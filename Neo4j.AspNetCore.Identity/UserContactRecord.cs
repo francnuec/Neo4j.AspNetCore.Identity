@@ -1,6 +1,6 @@
 ﻿using System;
-using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
 
 namespace Neo4j.AspNetCore.Identity
 {
@@ -19,11 +19,14 @@ namespace Neo4j.AspNetCore.Identity
             Value = value; //?? throw new ArgumentNullException(nameof(value));
         }
 
-        [JsonProperty]
-        public virtual string Value { get; protected set; }
+        [JsonProperty] public virtual string Value { get; protected set; }
 
-        [JsonProperty]
-        public virtual ConfirmationOccurrence ConfirmationRecord { get; protected set; }
+        [JsonProperty] public virtual ConfirmationOccurrence ConfirmationRecord { get; protected set; }
+
+        public bool Equals(UserEmail other)
+        {
+            return other?.Value?.Equals(Value) ?? ReferenceEquals(this, other);
+        }
 
         public virtual bool IsConfirmed()
         {
@@ -38,19 +41,12 @@ namespace Neo4j.AspNetCore.Identity
         public virtual void SetConfirmed(ConfirmationOccurrence confirmationRecord)
         {
             if (ConfirmationRecord == null || ConfirmationRecord.Instant == null)
-            {
                 ConfirmationRecord = confirmationRecord;
-            }
         }
 
         public virtual void SetUnconfirmed()
         {
             ConfirmationRecord = new ConfirmationOccurrence(null);
-        }
-
-        public bool Equals(UserEmail other)
-        {
-            return other?.Value?.Equals(Value) ?? ReferenceEquals(this, other);
         }
     }
 }

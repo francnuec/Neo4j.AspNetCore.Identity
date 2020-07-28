@@ -1,10 +1,6 @@
 ﻿using Neo4jClient;
 using Neo4jClient.DataAnnotations;
 using Neo4jClient.DataAnnotations.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Neo4j.AspNetCore.Identity.Sample.Models
 {
@@ -14,7 +10,8 @@ namespace Neo4j.AspNetCore.Identity.Sample.Models
         {
         }
 
-        public ApplicationContext(IGraphClient graphClient, EntityService entityService) : base(graphClient, entityService)
+        public ApplicationContext(IGraphClient graphClient, EntityService entityService) : base(graphClient,
+            entityService)
         {
         }
 
@@ -26,11 +23,13 @@ namespace Neo4j.AspNetCore.Identity.Sample.Models
         {
         }
 
-        public ApplicationContext(IGraphClient graphClient, EntityResolver resolver, EntityService entityService) : base(graphClient, resolver, entityService)
+        public ApplicationContext(IGraphClient graphClient, EntityResolver resolver, EntityService entityService) :
+            base(graphClient, resolver, entityService)
         {
         }
 
-        public ApplicationContext(IGraphClient graphClient, EntityConverter converter, EntityService entityService) : base(graphClient, converter, entityService)
+        public ApplicationContext(IGraphClient graphClient, EntityConverter converter, EntityService entityService) :
+            base(graphClient, converter, entityService)
         {
         }
 

@@ -1,7 +1,7 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Neo4j.AspNetCore.Identity
 {
@@ -20,33 +20,29 @@ namespace Neo4j.AspNetCore.Identity
             ProviderDisplayName = info.ProviderDisplayName;
         }
 
-        [JsonProperty]
-        public virtual string LoginProvider { get; protected internal set; }
+        [JsonProperty] public virtual string LoginProvider { get; protected internal set; }
 
-        [JsonProperty]
-        public virtual string ProviderKey { get; protected internal set; }
+        [JsonProperty] public virtual string ProviderKey { get; protected internal set; }
 
-        [JsonProperty]
-        public virtual string ProviderDisplayName { get; protected internal set; }
+        [JsonProperty] public virtual string ProviderDisplayName { get; protected internal set; }
 
-        [JsonProperty]
-        public virtual Occurrence CreatedOn { get; private set; }
-
-        public UserLoginInfo ToUserLoginInfo()
-        {
-            return new UserLoginInfo(LoginProvider, ProviderKey, ProviderDisplayName);
-        }
+        [JsonProperty] public virtual Occurrence CreatedOn { get; private set; }
 
         public bool Equals(IdentityExternalLogin other)
         {
             return other.LoginProvider.Equals(LoginProvider)
-                && other.ProviderKey.Equals(ProviderKey);
+                   && other.ProviderKey.Equals(ProviderKey);
         }
 
         public bool Equals(UserLoginInfo other)
         {
             return other.LoginProvider.Equals(LoginProvider)
-                && other.ProviderKey.Equals(ProviderKey);
+                   && other.ProviderKey.Equals(ProviderKey);
+        }
+
+        public UserLoginInfo ToUserLoginInfo()
+        {
+            return new UserLoginInfo(LoginProvider, ProviderKey, ProviderDisplayName);
         }
     }
 }
