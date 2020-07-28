@@ -15,7 +15,7 @@ namespace Neo4j.AspNetCore.Identity
         public IdentityRole()
         {
             Id = "role_" + Guid.NewGuid().ToString("N");
-            CreatedOn = new Occurrence(); 
+            CreatedOn = new Occurrence();
         }
 
         /// <summary>
@@ -25,6 +25,7 @@ namespace Neo4j.AspNetCore.Identity
         public IdentityRole(string roleName) : this()
         {
             Name = roleName;
+            NormalizedName = roleName;
         }
 
         [JsonProperty]
