@@ -114,13 +114,14 @@ namespace Neo4j.AspNetCore.Identity
             }
 
             var query = RoleMatch(role)
-                .Set("r = {roleParam}")
-                .WithParam("roleParam", role)
+                .Set("r", () => role)
                 ;
 
             //check if role has objects that were removed
             if (role.RemovedClaims.Count > 0)
             {
+                // with role r
+                query = query.With("r");
                 //remove each one
                 var existingCount = role.Claims?.Count() ?? 0;
                 foreach (var claim in role.RemovedClaims)

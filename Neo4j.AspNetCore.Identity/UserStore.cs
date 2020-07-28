@@ -41,6 +41,7 @@ namespace Neo4j.AspNetCore.Identity
             public virtual T User { private get; set; }
             public virtual IEnumerable<IdentityExternalLogin> Logins { private get; set; }
             public virtual IEnumerable<IdentityClaim> Claims { private get; set; }
+            public virtual IEnumerable<IdentityRole> Roles { private get; set; }
 
             public virtual T Combine()
             {
@@ -60,7 +61,13 @@ namespace Neo4j.AspNetCore.Identity
                         output.AddClaim(claim);
                     }
                 }
-
+                if (Roles != null)
+                {
+                    foreach (var role in Roles)
+                    {
+                        output.AddRole(role);
+                    }
+                }
                 return output;
             }
         }
@@ -100,7 +107,7 @@ namespace Neo4j.AspNetCore.Identity
             return query;
         }
 
-        protected ICypherFluentQuery AddRoles(ICypherFluentQuery query, IList<string> roles, string userId)
+        protected ICypherFluentQuery AddRoles(ICypherFluentQuery query, IList<IdentityRole> roles, string userId)
         {
             if ((roles == null) || (roles.Count == 0))
                 return query;
@@ -111,10 +118,11 @@ namespace Neo4j.AspNetCore.Identity
                 var userRoleVar = $"ur{i}";
                 query = query
                     .With("u")
-                    .Match(p => p.Pattern<IdentityRole>(roleVar).Constrain(r => r.NormalizedName == roles[i]))
+                    .Match(p => p.Pattern<IdentityRole>(roleVar).Constrain(r => r.NormalizedName == roles[i].NormalizedName))
                     .Merge(p => p.Pattern<TUser, IdentityUser_Role, IdentityRole>("u", userRoleVar, roleVar)
                     .Constrain(null, ur => ur.RoleId == CypherVariables.Get<IdentityRole>(roleVar).Id && ur.UserId == userId, null))
-                    .OnCreate().Set<IdentityUser_Role>(ur => ur.CreatedOn == new Occurrence(), userRoleVar);
+                    .OnCreate()
+                    .Set<IdentityUser_Role>(ur => ur.CreatedOn == new Occurrence(), userRoleVar);
             }
 
             return query;
@@ -169,13 +177,15 @@ namespace Neo4j.AspNetCore.Identity
             ThrowIfDisposed();
 
             var query = UserMatch(userId)
+                .OptionalMatch(p => p.Pattern((TUser u) => u.Roles, "r"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Logins, "l"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Claims, "c"))
-                .Return((u, c, l) => new FindUserResult<TUser>
+                .Return((u, c, l, r) => new FindUserResult<TUser>
                 {
                     User = u.As<TUser>(),
                     Logins = l.CollectAs<IdentityExternalLogin>(),
-                    Claims = c.CollectAs<IdentityClaim>()
+                    Claims = c.CollectAs<IdentityClaim>(),
+                    Roles = r.CollectAs<IdentityRole>(),
                 });
 
             var user = (await query.ResultsAsync).SingleOrDefault();
@@ -191,13 +201,16 @@ namespace Neo4j.AspNetCore.Identity
 
             var query = AnnotationsContext.Cypher
                 .Match(p => p.Pattern<TUser>("u").Constrain(u => u.NormalizedUserName == normalizedUserName))
+                .OptionalMatch(p => p.Pattern((TUser u) => u.Roles, "r"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Logins, "l"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Claims, "c"))
-                .Return((u, c, l) => new FindUserResult<TUser>
+                .Return((u, c, l, r) => new FindUserResult<TUser>
                 {
                     User = u.As<TUser>(),
                     Logins = l.CollectAs<IdentityExternalLogin>(),
-                    Claims = c.CollectAs<IdentityClaim>()
+                    Claims = c.CollectAs<IdentityClaim>(),
+                    Roles = r.CollectAs<IdentityRole>(),
+
                 });
 
             var results = await query.ResultsAsync;
@@ -413,23 +426,26 @@ namespace Neo4j.AspNetCore.Identity
         public virtual async Task<TUser> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
-
-            var results = await AnnotationsContext.Cypher
-                .Match(p => p.Pattern<IdentityExternalLogin, TUser>("login", "u")
-                .Constrain(login => login.ProviderKey == providerKey
-                    && login.LoginProvider == loginProvider))
+            var q = AnnotationsContext.Cypher
+                .Match(p => p.Pattern((TUser u) => u.Logins, "login")
+                    .Constrain(null, login => login.ProviderKey == providerKey
+                                        && login.LoginProvider == loginProvider))
                 //.Match($"(l:{Labels.Login})<-[:{Relationship.HasLogin}]-(u:{UserLabel})")
                 //.Where((UserLoginInfo l) => l.ProviderKey == login.ProviderKey)
                 //.AndWhere((UserLoginInfo l) => l.LoginProvider == login.LoginProvider)
                 //.OptionalMatch($"(u)-[:{Relationship.HasClaim}]->(c:{Labels.Claim})")
+                .OptionalMatch(p => p.Pattern((TUser u) => u.Roles, "r"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Logins, "l"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Claims, "c"))
-                .Return((u, c, l) => new FindUserResult<TUser>
+                .Return((u, c, l, r) => new FindUserResult<TUser>
                 {
                     User = u.As<TUser>(),
                     Logins = l.CollectAs<IdentityExternalLogin>(),
-                    Claims = c.CollectAs<IdentityClaim>()
-                }).ResultsAsync;
+                    Claims = c.CollectAs<IdentityClaim>(),
+                    Roles = r.CollectAs<IdentityRole>(),
+
+                });
+            var results = await q.ResultsAsync;
 
             var result = results.SingleOrDefault();
             return result?.Combine();
@@ -444,7 +460,7 @@ namespace Neo4j.AspNetCore.Identity
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            if (!user.Roles.Contains(roleName, StringComparer.CurrentCultureIgnoreCase))
+            if (!user.Roles.Select(x => x.NormalizedName).Contains(roleName, StringComparer.CurrentCultureIgnoreCase))
             {
                 user.AddRole(roleName);
             }
@@ -456,10 +472,10 @@ namespace Neo4j.AspNetCore.Identity
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            var roles = user.Roles.Where(x => string.Equals(x, roleName, StringComparison.CurrentCultureIgnoreCase)).ToArray().Distinct();
+            var roles = user.Roles.Where(x => string.Equals(x.NormalizedName, roleName, StringComparison.CurrentCultureIgnoreCase)).ToArray().Distinct();
 
             foreach (var role in roles)
-                user.RemoveRole(role);
+                user.RemoveRole(role.NormalizedName);
 
             return Task.FromResult(0);
         }
@@ -471,7 +487,7 @@ namespace Neo4j.AspNetCore.Identity
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            return Task.FromResult<IList<string>>(user.Roles.ToList());
+            return Task.FromResult<IList<string>>(user.Roles.Select(x => x.NormalizedName).ToList());
         }
 
         public virtual Task<bool> IsInRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
@@ -481,7 +497,7 @@ namespace Neo4j.AspNetCore.Identity
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            return Task.FromResult(user.Roles.Contains(roleName, StringComparer.CurrentCultureIgnoreCase));
+            return Task.FromResult(user.Roles.Select(x => x.NormalizedName).Contains(roleName, StringComparer.CurrentCultureIgnoreCase));
         }
 
         public virtual async Task<IList<TUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
@@ -494,13 +510,16 @@ namespace Neo4j.AspNetCore.Identity
             var query = AnnotationsContext.Cypher
                 .Match(p => p.Pattern((TUser u) => u.RolesRelationship, rr => rr.Role, "r")
                 .Constrain(null, null, r => r.NormalizedName == roleName))
+                .OptionalMatch(p => p.Pattern((TUser u) => u.Roles, "r"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Logins, "l"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Claims, "c"))
-                .Return((u, c, l) => new FindUserResult<TUser>
+                .Return((u, c, l, r) => new FindUserResult<TUser>
                 {
                     User = u.As<TUser>(),
                     Logins = l.CollectAs<IdentityExternalLogin>(),
-                    Claims = c.CollectAs<IdentityClaim>()
+                    Claims = c.CollectAs<IdentityClaim>(),
+                    Roles = r.CollectAs<IdentityRole>(),
+
                 });
 
             var results = await query.ResultsAsync;
@@ -579,15 +598,17 @@ namespace Neo4j.AspNetCore.Identity
                 throw new ArgumentNullException(nameof(claim));
 
             var results = await AnnotationsContext.Cypher
-                .Match(p => p.Pattern<IdentityClaim, TUser>("c", "u"))
+                .Match(p => p.Pattern<TUser, IdentityClaim>("u", "c"))
                 .Where((IdentityClaim c) => c.Type == claim.Type)
                 .AndWhere((IdentityClaim c) => c.Value == claim.Value)
                 .OptionalMatch(p => p.Pattern<TUser, IdentityExternalLogin>("u", "l"))
-                .Return((u, c, l) => new FindUserResult<TUser>
+                .OptionalMatch(p => p.Pattern((TUser u) => u.Roles, "r"))
+                .Return((u, c, l, r) => new FindUserResult<TUser>
                 {
                     User = u.As<TUser>(),
                     Logins = l.CollectAs<IdentityExternalLogin>(),
-                    Claims = c.CollectAs<IdentityClaim>()
+                    Claims = c.CollectAs<IdentityClaim>(),
+                    Roles = r.CollectAs<IdentityRole>()
                 }).ResultsAsync;
 
             var result = results?.Select(u => u.Combine()).ToList();
@@ -709,11 +730,13 @@ namespace Neo4j.AspNetCore.Identity
                 .Match(p => p.Pattern<TUser>("u").Constrain(u => u.Email.NormalizedValue == normalizedEmail))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Logins, "l"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Claims, "c"))
-                .Return((u, c, l) => new FindUserResult<TUser>
+                .OptionalMatch(p => p.Pattern((TUser u) => u.Roles, "r"))
+                .Return((u, c, l, r) => new FindUserResult<TUser>
                 {
                     User = u.As<TUser>(),
                     Logins = l.CollectAs<IdentityExternalLogin>(),
-                    Claims = c.CollectAs<IdentityClaim>()
+                    Claims = c.CollectAs<IdentityClaim>(),
+                    Roles = r.CollectAs<IdentityRole>()
                 });
 
             var results = await query.ResultsAsync;

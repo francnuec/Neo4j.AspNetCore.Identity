@@ -12,7 +12,7 @@ namespace Neo4j.AspNetCore.Identity
     [Table(Labels.User)]
     public class IdentityUser
     {
-        private readonly List<string> _roles;
+        // private readonly List<string> _roles;
         private readonly List<IdentityClaim> _claims;
         private readonly List<IdentityExternalLogin> _logins;
 
@@ -28,7 +28,7 @@ namespace Neo4j.AspNetCore.Identity
 
             _claims = new List<IdentityClaim>();
             _logins = new List<IdentityExternalLogin>();
-            _roles = new List<string>();
+            //_roles = new List<string>();
         }
 
         public IdentityUser(string userName) : this()
@@ -75,6 +75,10 @@ namespace Neo4j.AspNetCore.Identity
 
         [JsonProperty]
         public virtual bool IsTwoFactorEnabled { get; protected set; }
+        [JsonProperty]
+        public string FirstName { get; set; }
+        [JsonProperty]
+        public string LastName { get; set; }
 
         [Column(Relationship.Claims)]
         public virtual IEnumerable<IdentityClaim> Claims
@@ -109,22 +113,29 @@ namespace Neo4j.AspNetCore.Identity
                 }
             }
         }
-
+        /// <summary>
+        /// Collection of roles in the role
+        /// </summary>
+        [Column(Relationship.Roles)]
         [JsonProperty]
-        public virtual IEnumerable<string> Roles
-        {
-            get
-            {
-                return _roles;
-            }
-            protected set
-            {
-                if (value != null)
-                {
-                    _roles.AddRange(value.Where(r => !string.IsNullOrWhiteSpace(r)));
-                }
-            }
-        }
+        public IEnumerable<IdentityRole> Roles { get; protected internal set; } = new List<IdentityRole>();
+
+
+        //[JsonProperty]
+        //public virtual IEnumerable<string> Roles
+        //{
+        //    get
+        //    {
+        //        return _roles;
+        //    }
+        //    protected set
+        //    {
+        //        if (value != null)
+        //        {
+        //            _roles.AddRange(value.Where(r => !string.IsNullOrWhiteSpace(r)));
+        //        }
+        //    }
+        //}
 
         [JsonIgnore]
         protected internal List<object> RemovedObjects { get; } = new List<object>();
@@ -168,7 +179,7 @@ namespace Neo4j.AspNetCore.Identity
             IsLockoutEnabled = false;
         }
 
-        public virtual void SetUserName (string userName)
+        public virtual void SetUserName(string userName)
         {
             UserName = userName;
         }
@@ -276,15 +287,23 @@ namespace Neo4j.AspNetCore.Identity
             _logins.Remove(userLogin);
             RemovedObjects.Add(userLogin);
         }
-
+        public virtual void AddRole(IdentityRole role)
+        {
+            if (role == null)
+            {
+                throw new ArgumentNullException(nameof(role));
+            }
+            ((IList<IdentityRole>)Roles).Add(role);
+            //  _roles.Add(role);
+        }
         public virtual void AddRole(string role)
         {
             if (string.IsNullOrWhiteSpace(role))
             {
                 throw new ArgumentNullException(nameof(role));
             }
-
-            _roles.Add(role);
+            ((IList<IdentityRole>)Roles).Add(new IdentityRole(role));
+            //  _roles.Add(role);
         }
 
         public virtual void RemoveRole(string role)
@@ -294,7 +313,7 @@ namespace Neo4j.AspNetCore.Identity
                 throw new ArgumentNullException(nameof(role));
             }
 
-            _roles.Remove(role);
+            Roles = Roles.Where(x => x.NormalizedName != role).ToList();
             RemovedObjects.Add(role);
         }
 
@@ -310,7 +329,8 @@ namespace Neo4j.AspNetCore.Identity
 
         private static string GenerateId()
         {
-            return $"user_{Guid.NewGuid().ToString("N")}";
+            return Guid.NewGuid().ToString();
+            //  return $"user_{Guid.NewGuid().ToString("N")}";
         }
     }
 }
