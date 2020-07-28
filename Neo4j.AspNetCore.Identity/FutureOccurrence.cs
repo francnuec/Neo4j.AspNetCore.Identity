@@ -6,7 +6,7 @@ namespace Neo4j.AspNetCore.Identity
     [ComplexType]
     public class FutureOccurrence : Occurrence
     {
-        public FutureOccurrence() : base()
+        public FutureOccurrence()
         {
         }
 

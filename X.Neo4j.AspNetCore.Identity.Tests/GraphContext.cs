@@ -20,7 +20,5 @@ namespace X.Neo4j.AspNetCore.Identity.Tests
             : base(graphClient, converter, entityService)
         {
         }
-
-
     }
 }

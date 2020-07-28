@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
 
 namespace Neo4j.AspNetCore.Identity
 {
@@ -7,7 +7,9 @@ namespace Neo4j.AspNetCore.Identity
     public class UserPhoneNumber : UserContactRecord
     {
         [JsonConstructor]
-        protected internal UserPhoneNumber() : base() { }
+        protected internal UserPhoneNumber()
+        {
+        }
 
         public UserPhoneNumber(string phoneNumber) : base(phoneNumber)
         {

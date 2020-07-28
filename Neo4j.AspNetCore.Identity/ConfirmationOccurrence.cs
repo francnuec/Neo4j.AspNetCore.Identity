@@ -6,7 +6,7 @@ namespace Neo4j.AspNetCore.Identity
     [ComplexType]
     public class ConfirmationOccurrence : Occurrence
     {
-        public ConfirmationOccurrence() : base()
+        public ConfirmationOccurrence()
         {
         }
 

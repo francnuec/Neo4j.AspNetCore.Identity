@@ -26,7 +26,8 @@ namespace X.Neo4j.AspNetCore.Identity.Tests
         {
             return new RoleStore<IdentityRole>(new GraphContext(gclient));
         }
-        IdentityRole FetchTestRole(IGraphClient client, RoleStore<IdentityRole> rs)
+
+        private IdentityRole FetchTestRole(IGraphClient client, RoleStore<IdentityRole> rs)
         {
             var f = client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'")
                 .AsAnnotatedQuery()
@@ -35,11 +36,39 @@ namespace X.Neo4j.AspNetCore.Identity.Tests
             return rs.FindByIdAsync(f.Id).Result;
         }
 
-        IdentityRole CreateRole(IGraphClient client, RoleStore<IdentityRole> rs)
+        private IdentityRole CreateRole(IGraphClient client, RoleStore<IdentityRole> rs)
         {
             var result = rs.CreateAsync(new IdentityRole("TEST_ROLE")).Result;
             Assert.True(result.Succeeded);
             return FetchTestRole(client, rs);
+        }
+
+        [Fact]
+        public void AddClaim()
+        {
+            var client = CreateGraphClient();
+            var rs = CreateStore(client);
+            // cleanup
+            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
+            client.Cypher.Match("(n:IdentityClaim)").Where("n.Type= 'TEST_CLAIM'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
+
+            var createdRole = CreateRole(client, rs);
+
+            rs.AddClaimAsync(createdRole, new Claim("TEST_CLAIM", "TEST_CLAIM_VALUE")).Wait();
+            var res = rs.UpdateAsync(createdRole).Result;
+            Assert.True(res.Succeeded);
+            var addedRoleClaim = FetchTestRole(client, rs);
+            Assert.Single(addedRoleClaim.Claims);
+            Assert.Equal(addedRoleClaim.Claims.FirstOrDefault().Type, "TEST_CLAIM");
+            Assert.Equal(addedRoleClaim.Claims.FirstOrDefault().Value, "TEST_CLAIM_VALUE");
+
+            // cleanup
+            client.Cypher.Match("(n:IdentityClaim)").Where("n.Type= 'TEST_CLAIM'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
+            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
         }
 
         [Fact]
@@ -48,7 +77,8 @@ namespace X.Neo4j.AspNetCore.Identity.Tests
             var client = CreateGraphClient();
             var rs = CreateStore(client);
             // cleanup
-            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
+            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
 
             var result = rs.CreateAsync(new IdentityRole("TEST_ROLE")).Result;
             Assert.True(result.Succeeded);
@@ -62,7 +92,36 @@ namespace X.Neo4j.AspNetCore.Identity.Tests
             Assert.NotNull(fetchedRole.ConcurrencyStamp);
             Assert.NotNull(fetchedRole.CreatedOn);
             // cleanup
-            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
+            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
+        }
+
+        [Fact]
+        public void Delete()
+        {
+            var client = CreateGraphClient();
+            var rs = CreateStore(client);
+            // cleanup
+            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
+            var result = rs.CreateAsync(new IdentityRole("TEST_ROLE")).Result;
+            Assert.True(result.Succeeded);
+            var fetchedRole = client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'")
+                .AsAnnotatedQuery()
+                .Return(n => n.As<IdentityRole>())
+                .AsCypherQuery().ResultsAsync.Result.FirstOrDefault();
+            var res = rs.DeleteAsync(fetchedRole).Result;
+            Assert.True(res.Succeeded);
+            fetchedRole = client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'")
+                .AsAnnotatedQuery()
+                .Return(n => n.As<IdentityRole>())
+                .AsCypherQuery().ResultsAsync.Result.FirstOrDefault();
+
+            Assert.Null(fetchedRole);
+
+            // cleanup
+            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
         }
 
         [Fact]
@@ -71,7 +130,8 @@ namespace X.Neo4j.AspNetCore.Identity.Tests
             var client = CreateGraphClient();
             var rs = CreateStore(client);
             // cleanup
-            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
+            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
             var result = rs.CreateAsync(new IdentityRole("TEST_ROLE")).Result;
             Assert.True(result.Succeeded);
             var fetchedRole = client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'")
@@ -86,7 +146,41 @@ namespace X.Neo4j.AspNetCore.Identity.Tests
             Assert.Equal(addedRole.ConcurrencyStamp, fetchedRole.ConcurrencyStamp);
             Assert.Equal(addedRole.CreatedOn.Instant, fetchedRole.CreatedOn.Instant);
             // cleanup
-            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
+            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
+        }
+
+        [Fact]
+        public void RemoveClaim()
+        {
+            var client = CreateGraphClient();
+            var rs = CreateStore(client);
+            // cleanup
+            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
+            client.Cypher.Match("(n:IdentityClaim)").Where("n.Type= 'TEST_CLAIM'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
+
+            var createdRole = CreateRole(client, rs);
+
+            rs.AddClaimAsync(createdRole, new Claim("TEST_CLAIM", "TEST_CLAIM_VALUE")).Wait();
+            var res = rs.UpdateAsync(createdRole).Result;
+            Assert.True(res.Succeeded);
+            var addedRoleClaim = FetchTestRole(client, rs);
+            Assert.Single(addedRoleClaim.Claims);
+            Assert.Equal(addedRoleClaim.Claims.FirstOrDefault().Type, "TEST_CLAIM");
+            Assert.Equal(addedRoleClaim.Claims.FirstOrDefault().Value, "TEST_CLAIM_VALUE");
+
+            rs.RemoveClaimAsync(addedRoleClaim, new Claim("TEST_CLAIM", "TEST_CLAIM_VALUE")).Wait();
+            res = rs.UpdateAsync(addedRoleClaim).Result;
+            Assert.True(res.Succeeded);
+            addedRoleClaim = FetchTestRole(client, rs);
+            Assert.Empty(addedRoleClaim.Claims);
+            // cleanup
+            client.Cypher.Match("(n:IdentityClaim)").Where("n.Type= 'TEST_CLAIM'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
+            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
         }
 
         [Fact]
@@ -95,7 +189,8 @@ namespace X.Neo4j.AspNetCore.Identity.Tests
             var client = CreateGraphClient();
             var rs = CreateStore(client);
             // cleanup
-            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
+            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
             var result = rs.CreateAsync(new IdentityRole("TEST_ROLE1")).Result;
             Assert.True(result.Succeeded);
             var fetchedRole = client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE1'")
@@ -116,85 +211,8 @@ namespace X.Neo4j.AspNetCore.Identity.Tests
             Assert.Equal(fetchedUpdatedRole.ConcurrencyStamp, fetchedRole.ConcurrencyStamp);
             Assert.Equal(fetchedUpdatedRole.CreatedOn.Instant, fetchedRole.CreatedOn.Instant);
             // cleanup
-            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
-        }
-
-        [Fact]
-        public void Delete()
-        {
-            var client = CreateGraphClient();
-            var rs = CreateStore(client);
-            // cleanup
-            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
-            var result = rs.CreateAsync(new IdentityRole("TEST_ROLE")).Result;
-            Assert.True(result.Succeeded);
-            var fetchedRole = client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'")
-                .AsAnnotatedQuery()
-                .Return(n => n.As<IdentityRole>())
-                .AsCypherQuery().ResultsAsync.Result.FirstOrDefault();
-            var res = rs.DeleteAsync(fetchedRole).Result;
-            Assert.True(res.Succeeded);
-            fetchedRole = client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'")
-                .AsAnnotatedQuery()
-                .Return(n => n.As<IdentityRole>())
-                .AsCypherQuery().ResultsAsync.Result.FirstOrDefault();
-
-            Assert.Null(fetchedRole);
-
-            // cleanup
-            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
-        }
-
-        [Fact]
-        public void AddClaim()
-        {
-            var client = CreateGraphClient();
-            var rs = CreateStore(client);
-            // cleanup
-            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
-            client.Cypher.Match("(n:IdentityClaim)").Where("n.Type= 'TEST_CLAIM'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
-
-            var createdRole = CreateRole(client, rs);
-
-            rs.AddClaimAsync(createdRole, new Claim("TEST_CLAIM", "TEST_CLAIM_VALUE")).Wait();
-            var res = rs.UpdateAsync(createdRole).Result;
-            Assert.True(res.Succeeded);
-            var addedRoleClaim = FetchTestRole(client, rs);
-            Assert.Single(addedRoleClaim.Claims);
-            Assert.Equal(addedRoleClaim.Claims.FirstOrDefault().Type, "TEST_CLAIM");
-            Assert.Equal(addedRoleClaim.Claims.FirstOrDefault().Value, "TEST_CLAIM_VALUE");
-
-            // cleanup
-            client.Cypher.Match("(n:IdentityClaim)").Where("n.Type= 'TEST_CLAIM'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
-            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
-        }
-        [Fact]
-        public void RemoveClaim()
-        {
-            var client = CreateGraphClient();
-            var rs = CreateStore(client);
-            // cleanup
-            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
-            client.Cypher.Match("(n:IdentityClaim)").Where("n.Type= 'TEST_CLAIM'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
-
-            var createdRole = CreateRole(client, rs);
-
-            rs.AddClaimAsync(createdRole, new Claim("TEST_CLAIM", "TEST_CLAIM_VALUE")).Wait();
-            var res = rs.UpdateAsync(createdRole).Result;
-            Assert.True(res.Succeeded);
-            var addedRoleClaim = FetchTestRole(client, rs);
-            Assert.Single(addedRoleClaim.Claims);
-            Assert.Equal(addedRoleClaim.Claims.FirstOrDefault().Type, "TEST_CLAIM");
-            Assert.Equal(addedRoleClaim.Claims.FirstOrDefault().Value, "TEST_CLAIM_VALUE");
-
-            rs.RemoveClaimAsync(addedRoleClaim, new Claim("TEST_CLAIM", "TEST_CLAIM_VALUE")).Wait();
-            res = rs.UpdateAsync(addedRoleClaim).Result;
-            Assert.True(res.Succeeded);
-            addedRoleClaim = FetchTestRole(client, rs);
-            Assert.Empty(addedRoleClaim.Claims);
-            // cleanup
-            client.Cypher.Match("(n:IdentityClaim)").Where("n.Type= 'TEST_CLAIM'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
-            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n").ExecuteWithoutResultsAsync().Wait();
+            client.Cypher.Match("(n:IdentityRole)").Where("n.Name= 'TEST_ROLE'").DetachDelete("n")
+                .ExecuteWithoutResultsAsync().Wait();
         }
     }
 }

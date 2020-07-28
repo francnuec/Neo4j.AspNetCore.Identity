@@ -1,7 +1,7 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Claims;
 using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Neo4j.AspNetCore.Identity
 {
@@ -25,32 +25,29 @@ namespace Neo4j.AspNetCore.Identity
             Value = value; //?? throw new ArgumentNullException(nameof(value));
         }
 
-        [JsonProperty]
-        public virtual string Type { get; protected internal set; }
+        [JsonProperty] public virtual string Type { get; protected internal set; }
 
-        [JsonProperty]
-        public virtual string Value { get; protected internal set; }
+        [JsonProperty] public virtual string Value { get; protected internal set; }
 
-        [JsonProperty]
-        public virtual Occurrence CreatedOn { get; private set; }
+        [JsonProperty] public virtual Occurrence CreatedOn { get; private set; }
 
-        public Claim ToSecurityClaim()
+        public bool Equals(Claim other)
         {
-            return new Claim(Type, Value);
+            return Type.Equals(other?.Type)
+                   && (Value?.Equals(other?.Value)
+                       ?? Value == null && other?.Value == null);
         }
 
         public bool Equals(IdentityClaim other)
         {
             return Type.Equals(other?.Type)
-                && (Value?.Equals(other?.Value) 
-                ?? (Value == null && other?.Value == null));
+                   && (Value?.Equals(other?.Value)
+                       ?? Value == null && other?.Value == null);
         }
 
-        public bool Equals(Claim other)
+        public Claim ToSecurityClaim()
         {
-            return Type.Equals(other?.Type)
-                && (Value?.Equals(other?.Value)
-                ?? (Value == null && other?.Value == null));
+            return new Claim(Type, Value);
         }
     }
 }

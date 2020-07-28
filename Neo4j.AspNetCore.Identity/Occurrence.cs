@@ -1,6 +1,6 @@
 ﻿using System;
-using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations.Schema;
+using Newtonsoft.Json;
 
 namespace Neo4j.AspNetCore.Identity
 {
@@ -16,7 +16,6 @@ namespace Neo4j.AspNetCore.Identity
             Instant = occuranceInstantUtc;
         }
 
-        [JsonProperty]
-        public virtual DateTimeOffset? Instant { get; private set; }
+        [JsonProperty] public virtual DateTimeOffset? Instant { get; private set; }
     }
 }

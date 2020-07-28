@@ -5,10 +5,8 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
-using Neo4jClient.DataAnnotations.Cypher;
 using Neo4jClient.Cypher;
 using Neo4jClient.DataAnnotations;
-using Neo4jClient;
 
 namespace Neo4j.AspNetCore.Identity
 {
@@ -25,7 +23,7 @@ namespace Neo4j.AspNetCore.Identity
         protected bool _disposed;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RoleStore{TRole}"/> class
+        ///     Initializes a new instance of the <see cref="RoleStore{TRole}" /> class
         /// </summary>
         /// <param name="database">The database.</param>
         public RoleStore(AnnotationsContext context) : base(context)
@@ -33,26 +31,43 @@ namespace Neo4j.AspNetCore.Identity
             context.EntityService.AddEntityType(typeof(TRole));
         }
 
-        protected internal class FindRoleResult<T>
-            where T : IdentityRole
+        public virtual Task<IList<Claim>> GetClaimsAsync(TRole role,
+            CancellationToken cancellationToken = new CancellationToken())
         {
-            public virtual T Role { private get; set; }
-            public virtual IEnumerable<IdentityClaim> Claims { private get; set; }
+            cancellationToken.ThrowIfCancellationRequested();
 
-            public virtual T Combine()
-            {
-                var output = Role;
+            if (role == null) throw new ArgumentNullException(nameof(role));
 
-                if (Claims != null)
-                {
-                    foreach (var claim in Claims)
-                    {
-                        output.AddClaim(claim);
-                    }
-                }
+            return Task.FromResult((IList<Claim>)role.Claims.Select(c => new Claim(c.Type, c.Value)).ToList());
+        }
 
-                return output;
-            }
+        public virtual Task AddClaimAsync(TRole role, Claim claim,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (role == null) throw new ArgumentNullException(nameof(role));
+
+            if (claim == null) throw new ArgumentNullException(nameof(claim));
+
+            role.AddClaim(new IdentityClaim(claim));
+
+            return Task.FromResult(0);
+        }
+
+        public virtual Task RemoveClaimAsync(TRole role, Claim claim,
+            CancellationToken cancellationToken = new CancellationToken())
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (role == null) throw new ArgumentNullException(nameof(role));
+
+            if (claim == null) throw new ArgumentNullException(nameof(claim));
+
+            foreach (var _claim in role.Claims.Where(x => x.Type == claim.Type && x.Value == claim.Value).ToList())
+                role.RemoveClaim(_claim);
+
+            return Task.FromResult(0);
         }
 
         public virtual void Dispose()
@@ -60,61 +75,28 @@ namespace Neo4j.AspNetCore.Identity
             _disposed = true;
         }
 
-        public virtual async Task<IdentityResult> CreateAsync(TRole role, CancellationToken cancellationToken = new CancellationToken())
+        public virtual async Task<IdentityResult> CreateAsync(TRole role,
+            CancellationToken cancellationToken = new CancellationToken())
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (role == null)
-            {
-                throw new ArgumentNullException(nameof(role));
-            }
+            if (role == null) throw new ArgumentNullException(nameof(role));
 
-            var query = AnnotationsContext.Cypher.Create((p) => p.Pattern<TRole>("r").Prop(() => role));
+            var query = AnnotationsContext.Cypher.Create(p => p.Pattern<TRole>("r").Prop(() => role));
             await query.ExecuteWithoutResultsAsync();
 
             return IdentityResult.Success;
         }
 
-        protected ICypherFluentQuery AddClaims(ICypherFluentQuery query, IList<IdentityClaim> claims)
-        {
-            if ((claims == null) || (claims.Count == 0))
-                return query;
-
-            for (var i = 0; i < claims.Count; i++)
-            {
-                var claim = claims[i];
-                query = query
-                    .With("r")
-                    .Merge(p => p.Pattern<TRole, IdentityClaim>("r", $"c{i}")
-                    .Constrain(null, c => c.Type == claim.Type && c.Value == claim.Value))
-                    .OnCreate().Set($"c{i}", () => claim);
-            }
-
-            return query;
-        }
-
-        protected virtual ICypherFluentQuery RoleMatch(TRole role)
-        {
-            return RoleMatch(role.Id);
-        }
-
-        protected virtual ICypherFluentQuery RoleMatch(string roleId)
-        {
-            return AnnotationsContext.Cypher
-                .Match(p => p.Pattern<TRole>("r").Constrain(r => r.Id == roleId));
-        }
-
-        public virtual async Task<IdentityResult> UpdateAsync(TRole role, CancellationToken cancellationToken = new CancellationToken())
+        public virtual async Task<IdentityResult> UpdateAsync(TRole role,
+            CancellationToken cancellationToken = new CancellationToken())
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (role == null)
-            {
-                throw new ArgumentNullException(nameof(role));
-            }
+            if (role == null) throw new ArgumentNullException(nameof(role));
 
             var query = RoleMatch(role)
-                .Set("r", () => role)
+                    .Set("r", () => role)
                 ;
 
             //check if role has objects that were removed
@@ -128,8 +110,8 @@ namespace Neo4j.AspNetCore.Identity
                 {
                     var idx = role.RemovedClaims.IndexOf(claim) + existingCount;
                     query = query.OptionalMatch(p => p.Pattern((TRole r) => r.Claims, $"cr{idx}", $"c{idx}")
-                    .Constrain(null, c => c.Type == claim.Type && c.Value == claim.Value))
-                    .Delete($"c{idx},cr{idx}");
+                            .Constrain(null, c => c.Type == claim.Type && c.Value == claim.Value))
+                        .Delete($"c{idx},cr{idx}");
                 }
             }
 
@@ -140,16 +122,14 @@ namespace Neo4j.AspNetCore.Identity
             return IdentityResult.Success;
         }
 
-        public virtual async Task<IdentityResult> DeleteAsync(TRole role, CancellationToken cancellationToken = new CancellationToken())
+        public virtual async Task<IdentityResult> DeleteAsync(TRole role,
+            CancellationToken cancellationToken = new CancellationToken())
         {
             ThrowIfDisposed();
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (role == null)
-            {
-                throw new ArgumentNullException(nameof(role));
-            }
+            if (role == null) throw new ArgumentNullException(nameof(role));
 
             await RoleMatch(role)
                 .OptionalMatch(p => p.Pattern((TRole r) => r.Claims, "cr", "c"))
@@ -159,57 +139,40 @@ namespace Neo4j.AspNetCore.Identity
             return IdentityResult.Success;
         }
 
-        /// <summary>
-        ///     Throws if disposed.
-        /// </summary>
-        /// <exception>
-        ///     <cref>System.ObjectDisposedException</cref>
-        /// </exception>
-        protected virtual void ThrowIfDisposed()
-        {
-            if (_disposed)
-                throw new ObjectDisposedException(GetType().Name);
-        }
-
-        public virtual Task<string> GetRoleIdAsync(TRole role, CancellationToken cancellationToken = new CancellationToken())
+        public virtual Task<string> GetRoleIdAsync(TRole role,
+            CancellationToken cancellationToken = new CancellationToken())
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (role == null)
-            {
-                throw new ArgumentNullException(nameof(role));
-            }
+            if (role == null) throw new ArgumentNullException(nameof(role));
 
             return Task.FromResult(role.Id);
         }
 
-        public virtual Task<string> GetRoleNameAsync(TRole role, CancellationToken cancellationToken = new CancellationToken())
+        public virtual Task<string> GetRoleNameAsync(TRole role,
+            CancellationToken cancellationToken = new CancellationToken())
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (role == null)
-            {
-                throw new ArgumentNullException(nameof(role));
-            }
+            if (role == null) throw new ArgumentNullException(nameof(role));
 
             return Task.FromResult(role.Name);
         }
 
-        public virtual Task SetRoleNameAsync(TRole role, string roleName, CancellationToken cancellationToken = new CancellationToken())
+        public virtual Task SetRoleNameAsync(TRole role, string roleName,
+            CancellationToken cancellationToken = new CancellationToken())
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (role == null)
-            {
-                throw new ArgumentNullException(nameof(role));
-            }
+            if (role == null) throw new ArgumentNullException(nameof(role));
 
             role.Name = roleName;
 
             return Task.FromResult(0);
         }
 
-        public virtual async Task<TRole> FindByIdAsync(string roleId, CancellationToken cancellationToken = new CancellationToken())
+        public virtual async Task<TRole> FindByIdAsync(string roleId,
+            CancellationToken cancellationToken = new CancellationToken())
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -228,7 +191,8 @@ namespace Neo4j.AspNetCore.Identity
             return ret;
         }
 
-        public virtual async Task<TRole> FindByNameAsync(string normalizedName, CancellationToken cancellationToken = new CancellationToken())
+        public virtual async Task<TRole> FindByNameAsync(string normalizedName,
+            CancellationToken cancellationToken = new CancellationToken())
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -248,83 +212,85 @@ namespace Neo4j.AspNetCore.Identity
             return role;
         }
 
-        public virtual Task<string> GetNormalizedRoleNameAsync(TRole role, CancellationToken cancellationToken = default(CancellationToken))
+        public virtual Task<string> GetNormalizedRoleNameAsync(TRole role,
+            CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (role == null)
-            {
-                throw new ArgumentNullException(nameof(role));
-            }
+            if (role == null) throw new ArgumentNullException(nameof(role));
 
             return Task.FromResult(role.NormalizedName);
         }
 
-        public virtual Task SetNormalizedRoleNameAsync(TRole role, string normalizedName, CancellationToken cancellationToken = default(CancellationToken))
+        public virtual Task SetNormalizedRoleNameAsync(TRole role, string normalizedName,
+            CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (role == null)
-            {
-                throw new ArgumentNullException(nameof(role));
-            }
+            if (role == null) throw new ArgumentNullException(nameof(role));
 
             role.NormalizedName = normalizedName;
 
             return Task.FromResult(0);
         }
 
-        public virtual Task<IList<Claim>> GetClaimsAsync(TRole role, CancellationToken cancellationToken = new CancellationToken())
+        protected ICypherFluentQuery AddClaims(ICypherFluentQuery query, IList<IdentityClaim> claims)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            if (claims == null || claims.Count == 0)
+                return query;
 
-            if (role == null)
+            for (var i = 0; i < claims.Count; i++)
             {
-                throw new ArgumentNullException(nameof(role));
+                var claim = claims[i];
+                query = query
+                    .With("r")
+                    .Merge(p => p.Pattern<TRole, IdentityClaim>("r", $"c{i}")
+                        .Constrain(null, c => c.Type == claim.Type && c.Value == claim.Value))
+                    .OnCreate().Set($"c{i}", () => claim);
             }
 
-            return Task.FromResult((IList<Claim>)role.Claims.Select(c => new Claim(c.Type, c.Value)).ToList());
+            return query;
         }
 
-        public virtual Task AddClaimAsync(TRole role, Claim claim, CancellationToken cancellationToken = new CancellationToken())
+        protected virtual ICypherFluentQuery RoleMatch(TRole role)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (role == null)
-            {
-                throw new ArgumentNullException(nameof(role));
-            }
-
-            if (claim == null)
-            {
-                throw new ArgumentNullException(nameof(claim));
-            }
-
-            role.AddClaim(new IdentityClaim(claim));
-
-            return Task.FromResult(0);
+            return RoleMatch(role.Id);
         }
 
-        public virtual Task RemoveClaimAsync(TRole role, Claim claim, CancellationToken cancellationToken = new CancellationToken())
+        protected virtual ICypherFluentQuery RoleMatch(string roleId)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            return AnnotationsContext.Cypher
+                .Match(p => p.Pattern<TRole>("r").Constrain(r => r.Id == roleId));
+        }
 
-            if (role == null)
+        /// <summary>
+        ///     Throws if disposed.
+        /// </summary>
+        /// <exception>
+        ///     <cref>System.ObjectDisposedException</cref>
+        /// </exception>
+        protected virtual void ThrowIfDisposed()
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(GetType().Name);
+        }
+
+        protected internal class FindRoleResult<T>
+            where T : IdentityRole
+        {
+            public virtual T Role { private get; set; }
+            public virtual IEnumerable<IdentityClaim> Claims { private get; set; }
+
+            public virtual T Combine()
             {
-                throw new ArgumentNullException(nameof(role));
-            }
+                var output = Role;
 
-            if (claim == null)
-            {
-                throw new ArgumentNullException(nameof(claim));
-            }
+                if (Claims != null)
+                    foreach (var claim in Claims)
+                        output.AddClaim(claim);
 
-            foreach (var _claim in role.Claims.Where(x => x.Type == claim.Type && x.Value == claim.Value).ToList())
-            {
-                role.RemoveClaim(_claim);
+                return output;
             }
-
-            return Task.FromResult(0);
         }
     }
 }

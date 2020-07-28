@@ -6,75 +6,37 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
 using Neo4jClient.Cypher;
-using Neo4jClient.DataAnnotations.Cypher;
-using Neo4jClient;
 using Neo4jClient.DataAnnotations;
 
 namespace Neo4j.AspNetCore.Identity
 {
     public class UserStore<TUser>
         : Store,
-        IUserStore<TUser>,
-        IUserLoginStore<TUser>,
-        IUserRoleStore<TUser>,
-        IUserClaimStore<TUser>,
-        IUserPasswordStore<TUser>,
-        IUserSecurityStampStore<TUser>,
-        IUserEmailStore<TUser>,
-        IUserLockoutStore<TUser>,
-        IUserPhoneNumberStore<TUser>,
-        //IQueryableUserStore<TUser>,
-        IUserTwoFactorStore<TUser>
+            IUserStore<TUser>,
+            IUserLoginStore<TUser>,
+            IUserRoleStore<TUser>,
+            IUserClaimStore<TUser>,
+            IUserPasswordStore<TUser>,
+            IUserSecurityStampStore<TUser>,
+            IUserEmailStore<TUser>,
+            IUserLockoutStore<TUser>,
+            IUserPhoneNumberStore<TUser>,
+            //IQueryableUserStore<TUser>,
+            IUserTwoFactorStore<TUser>
         where TUser : IdentityUser
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="UserStore{TUser}"/> class using an already initialized Neo4j GrpahClient.
+        ///     Initializes a new instance of the <see cref="UserStore{TUser}" /> class using an already initialized Neo4j
+        ///     GrpahClient.
         /// </summary>
         public UserStore(AnnotationsContext context) : base(context)
         {
             context.EntityService.AddEntityType(typeof(TUser));
         }
 
-        protected internal class FindUserResult<T>
-            where T : IdentityUser//, new()
-        {
-            public virtual T User { private get; set; }
-            public virtual IEnumerable<IdentityExternalLogin> Logins { private get; set; }
-            public virtual IEnumerable<IdentityClaim> Claims { private get; set; }
-            public virtual IEnumerable<IdentityRole> Roles { private get; set; }
-
-            public virtual T Combine()
-            {
-                var output = User;
-                if (Logins != null)
-                {
-                    foreach (var login in Logins)
-                    {
-                        output.AddLogin(login); //.Select(l => l.ToUserLoginInfo()));
-                    }
-                }
-
-                if (Claims != null)
-                {
-                    foreach (var claim in Claims)
-                    {
-                        output.AddClaim(claim);
-                    }
-                }
-                if (Roles != null)
-                {
-                    foreach (var role in Roles)
-                    {
-                        output.AddRole(role);
-                    }
-                }
-                return output;
-            }
-        }
-
         protected ICypherFluentQuery AddClaims(ICypherFluentQuery query, IList<IdentityClaim> claims)
         {
-            if ((claims == null) || (claims.Count == 0))
+            if (claims == null || claims.Count == 0)
                 return query;
 
             for (var i = 0; i < claims.Count; i++)
@@ -83,7 +45,7 @@ namespace Neo4j.AspNetCore.Identity
                 query = query
                     .With("u")
                     .Merge(p => p.Pattern<TUser, IdentityClaim>("u", $"c{i}")
-                    .Constrain(null, c => c.Type == claim.Type && c.Value == claim.Value))
+                        .Constrain(null, c => c.Type == claim.Type && c.Value == claim.Value))
                     .OnCreate().Set($"c{i}", () => claim);
             }
 
@@ -92,7 +54,7 @@ namespace Neo4j.AspNetCore.Identity
 
         protected ICypherFluentQuery AddLogins(ICypherFluentQuery query, IList<IdentityExternalLogin> logins)
         {
-            if ((logins == null) || (logins.Count == 0))
+            if (logins == null || logins.Count == 0)
                 return query;
 
             for (var i = 0; i < logins.Count; i++)
@@ -101,15 +63,17 @@ namespace Neo4j.AspNetCore.Identity
                 query = query
                     .With("u")
                     .Merge(p => p.Pattern<TUser, IdentityExternalLogin>("u", $"l{i}")
-                    .Constrain(null, l => l.LoginProvider == login.LoginProvider && l.ProviderKey == login.ProviderKey))
+                        .Constrain(null,
+                            l => l.LoginProvider == login.LoginProvider && l.ProviderKey == login.ProviderKey))
                     .OnCreate().Set($"l{i}", () => login);
             }
+
             return query;
         }
 
         protected ICypherFluentQuery AddRoles(ICypherFluentQuery query, IList<IdentityRole> roles, string userId)
         {
-            if ((roles == null) || (roles.Count == 0))
+            if (roles == null || roles.Count == 0)
                 return query;
 
             for (var i = 0; i < roles.Count; i++)
@@ -118,9 +82,12 @@ namespace Neo4j.AspNetCore.Identity
                 var userRoleVar = $"ur{i}";
                 query = query
                     .With("u")
-                    .Match(p => p.Pattern<IdentityRole>(roleVar).Constrain(r => r.NormalizedName == roles[i].NormalizedName))
+                    .Match(p => p.Pattern<IdentityRole>(roleVar)
+                        .Constrain(r => r.NormalizedName == roles[i].NormalizedName))
                     .Merge(p => p.Pattern<TUser, IdentityUser_Role, IdentityRole>("u", userRoleVar, roleVar)
-                    .Constrain(null, ur => ur.RoleId == CypherVariables.Get<IdentityRole>(roleVar).Id && ur.UserId == userId, null))
+                        .Constrain(null,
+                            ur => ur.RoleId == CypherVariables.Get<IdentityRole>(roleVar).Id && ur.UserId == userId,
+                            null))
                     .OnCreate()
                     .Set<IdentityUser_Role>(ur => ur.CreatedOn == new Occurrence(), userRoleVar);
             }
@@ -139,7 +106,33 @@ namespace Neo4j.AspNetCore.Identity
                 .Match(p => p.Pattern<TUser>("u").Constrain(u => u.Id == userId));
         }
 
+        protected internal class FindUserResult<T>
+            where T : IdentityUser //, new()
+        {
+            public virtual T User { private get; set; }
+            public virtual IEnumerable<IdentityExternalLogin> Logins { private get; set; }
+            public virtual IEnumerable<IdentityClaim> Claims { private get; set; }
+            public virtual IEnumerable<IdentityRole> Roles { private get; set; }
+
+            public virtual T Combine()
+            {
+                var output = User;
+                if (Logins != null)
+                    foreach (var login in Logins)
+                        output.AddLogin(login); //.Select(l => l.ToUserLoginInfo()));
+
+                if (Claims != null)
+                    foreach (var claim in Claims)
+                        output.AddClaim(claim);
+                if (Roles != null)
+                    foreach (var role in Roles)
+                        output.AddRole(role);
+                return output;
+            }
+        }
+
         #region IUserStore
+
         public virtual async Task<IdentityResult> CreateAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
@@ -185,7 +178,7 @@ namespace Neo4j.AspNetCore.Identity
                     User = u.As<TUser>(),
                     Logins = l.CollectAs<IdentityExternalLogin>(),
                     Claims = c.CollectAs<IdentityClaim>(),
-                    Roles = r.CollectAs<IdentityRole>(),
+                    Roles = r.CollectAs<IdentityRole>()
                 });
 
             var user = (await query.ResultsAsync).SingleOrDefault();
@@ -209,8 +202,7 @@ namespace Neo4j.AspNetCore.Identity
                     User = u.As<TUser>(),
                     Logins = l.CollectAs<IdentityExternalLogin>(),
                     Claims = c.CollectAs<IdentityClaim>(),
-                    Roles = r.CollectAs<IdentityRole>(),
-
+                    Roles = r.CollectAs<IdentityRole>()
                 });
 
             var results = await query.ResultsAsync;
@@ -250,7 +242,8 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.UserName);
         }
 
-        public virtual async Task SetNormalizedUserNameAsync(TUser user, string normalizedName, CancellationToken cancellationToken)
+        public virtual async Task SetNormalizedUserNameAsync(TUser user, string normalizedName,
+            CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -294,8 +287,9 @@ namespace Neo4j.AspNetCore.Identity
                 {
                     var idx = logins.IndexOf(login) + existingCount;
                     query = query.OptionalMatch(p => p.Pattern((TUser u) => u.Logins, $"lr{idx}", $"l{idx}")
-                    .Constrain(null, l => l.LoginProvider == login.LoginProvider && l.ProviderKey == login.ProviderKey))
-                    .Delete($"l{idx},lr{idx}");
+                            .Constrain(null,
+                                l => l.LoginProvider == login.LoginProvider && l.ProviderKey == login.ProviderKey))
+                        .Delete($"l{idx},lr{idx}");
                 }
 
                 var claims = user.RemovedObjects.OfType<IdentityClaim>().ToList();
@@ -304,8 +298,8 @@ namespace Neo4j.AspNetCore.Identity
                 {
                     var idx = claims.IndexOf(claim) + existingCount;
                     query = query.OptionalMatch(p => p.Pattern((TUser u) => u.Claims, $"cr{idx}", $"c{idx}")
-                    .Constrain(null, c => c.Type == claim.Type && c.Value == claim.Value))
-                    .Delete($"c{idx},cr{idx}");
+                            .Constrain(null, c => c.Type == claim.Type && c.Value == claim.Value))
+                        .Delete($"c{idx},cr{idx}");
                 }
 
                 var roles = user.RemovedObjects.OfType<string>().ToList();
@@ -313,9 +307,11 @@ namespace Neo4j.AspNetCore.Identity
                 foreach (var role in roles)
                 {
                     var idx = roles.IndexOf(role) + existingCount;
-                    query = query.OptionalMatch(p => p.Pattern<TUser, IdentityUser_Role, IdentityRole>((TUser u) => u.RolesRelationship, $"rr{idx}", $"r{idx}")
-                    .Constrain(null, rr => rr.UserId == user.Id, r => r.NormalizedName == role))
-                    .Delete($"rr{idx}"); //never delete roles here
+                    query = query.OptionalMatch(p => p
+                            .Pattern<TUser, IdentityUser_Role, IdentityRole>(u => u.RolesRelationship, $"rr{idx}",
+                                $"r{idx}")
+                            .Constrain(null, rr => rr.UserId == user.Id, r => r.NormalizedName == role))
+                        .Delete($"rr{idx}"); //never delete roles here
                 }
             }
 
@@ -327,10 +323,12 @@ namespace Neo4j.AspNetCore.Identity
 
             return IdentityResult.Success;
         }
+
         #endregion
 
         #region IDisposable Support
-        protected bool _disposed = false; // To detect redundant calls
+
+        protected bool _disposed; // To detect redundant calls
 
         protected virtual void Dispose(bool disposing)
         {
@@ -374,9 +372,11 @@ namespace Neo4j.AspNetCore.Identity
             if (_disposed)
                 throw new ObjectDisposedException(GetType().Name);
         }
+
         #endregion
 
         #region IUserLoginStore
+
         public virtual Task AddLoginAsync(TUser user, UserLoginInfo login, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
@@ -385,17 +385,16 @@ namespace Neo4j.AspNetCore.Identity
                 throw new ArgumentNullException(nameof(user));
 
             foreach (var _login in user.Logins.Where(x => x.LoginProvider == login.LoginProvider
-            && x.ProviderKey == login.ProviderKey).ToList())
-            {
+                                                          && x.ProviderKey == login.ProviderKey).ToList())
                 user.RemoveLogin(_login);
-            }
 
             user.AddLogin(new IdentityExternalLogin(login));
 
             return Task.FromResult(0);
         }
 
-        public virtual Task RemoveLoginAsync(TUser user, string loginProvider, string providerKey, CancellationToken cancellationToken)
+        public virtual Task RemoveLoginAsync(TUser user, string loginProvider, string providerKey,
+            CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -403,10 +402,8 @@ namespace Neo4j.AspNetCore.Identity
                 throw new ArgumentNullException(nameof(user));
 
             foreach (var _login in user.Logins.Where(x => x.LoginProvider == loginProvider
-            && x.ProviderKey == providerKey).ToList())
-            {
+                                                          && x.ProviderKey == providerKey).ToList())
                 user.RemoveLogin(_login);
-            }
 
             return Task.FromResult(0);
         }
@@ -423,13 +420,14 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(logins);
         }
 
-        public virtual async Task<TUser> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
+        public virtual async Task<TUser> FindByLoginAsync(string loginProvider, string providerKey,
+            CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
             var q = AnnotationsContext.Cypher
                 .Match(p => p.Pattern((TUser u) => u.Logins, "login")
                     .Constrain(null, login => login.ProviderKey == providerKey
-                                        && login.LoginProvider == loginProvider))
+                                              && login.LoginProvider == loginProvider))
                 //.Match($"(l:{Labels.Login})<-[:{Relationship.HasLogin}]-(u:{UserLabel})")
                 //.Where((UserLoginInfo l) => l.ProviderKey == login.ProviderKey)
                 //.AndWhere((UserLoginInfo l) => l.LoginProvider == login.LoginProvider)
@@ -442,17 +440,18 @@ namespace Neo4j.AspNetCore.Identity
                     User = u.As<TUser>(),
                     Logins = l.CollectAs<IdentityExternalLogin>(),
                     Claims = c.CollectAs<IdentityClaim>(),
-                    Roles = r.CollectAs<IdentityRole>(),
-
+                    Roles = r.CollectAs<IdentityRole>()
                 });
             var results = await q.ResultsAsync;
 
             var result = results.SingleOrDefault();
             return result?.Combine();
         }
+
         #endregion
 
         #region IUserRoleStore
+
         public virtual async Task AddToRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
@@ -461,9 +460,7 @@ namespace Neo4j.AspNetCore.Identity
                 throw new ArgumentNullException(nameof(user));
 
             if (!user.Roles.Select(x => x.NormalizedName).Contains(roleName, StringComparer.CurrentCultureIgnoreCase))
-            {
                 user.AddRole(roleName);
-            }
         }
 
         public virtual Task RemoveFromRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
@@ -472,7 +469,9 @@ namespace Neo4j.AspNetCore.Identity
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            var roles = user.Roles.Where(x => string.Equals(x.NormalizedName, roleName, StringComparison.CurrentCultureIgnoreCase)).ToArray().Distinct();
+            var roles = user.Roles
+                .Where(x => string.Equals(x.NormalizedName, roleName, StringComparison.CurrentCultureIgnoreCase))
+                .ToArray().Distinct();
 
             foreach (var role in roles)
                 user.RemoveRole(role.NormalizedName);
@@ -497,10 +496,12 @@ namespace Neo4j.AspNetCore.Identity
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            return Task.FromResult(user.Roles.Select(x => x.NormalizedName).Contains(roleName, StringComparer.CurrentCultureIgnoreCase));
+            return Task.FromResult(user.Roles.Select(x => x.NormalizedName)
+                .Contains(roleName, StringComparer.CurrentCultureIgnoreCase));
         }
 
-        public virtual async Task<IList<TUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
+        public virtual async Task<IList<TUser>> GetUsersInRoleAsync(string roleName,
+            CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -509,7 +510,7 @@ namespace Neo4j.AspNetCore.Identity
 
             var query = AnnotationsContext.Cypher
                 .Match(p => p.Pattern((TUser u) => u.RolesRelationship, rr => rr.Role, "r")
-                .Constrain(null, null, r => r.NormalizedName == roleName))
+                    .Constrain(null, null, r => r.NormalizedName == roleName))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Roles, "r"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Logins, "l"))
                 .OptionalMatch(p => p.Pattern((TUser u) => u.Claims, "c"))
@@ -518,8 +519,7 @@ namespace Neo4j.AspNetCore.Identity
                     User = u.As<TUser>(),
                     Logins = l.CollectAs<IdentityExternalLogin>(),
                     Claims = c.CollectAs<IdentityClaim>(),
-                    Roles = r.CollectAs<IdentityRole>(),
-
+                    Roles = r.CollectAs<IdentityRole>()
                 });
 
             var results = await query.ResultsAsync;
@@ -527,9 +527,11 @@ namespace Neo4j.AspNetCore.Identity
 
             return usersInRole;
         }
+
         #endregion
 
         #region IUserClaimStore
+
         public virtual Task<IList<Claim>> GetClaimsAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
@@ -549,15 +551,13 @@ namespace Neo4j.AspNetCore.Identity
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            foreach (var claim in claims)
-            {
-                user.AddClaim(new IdentityClaim(claim));
-            }
+            foreach (var claim in claims) user.AddClaim(new IdentityClaim(claim));
 
             return Task.FromResult(0);
         }
 
-        public virtual Task ReplaceClaimAsync(TUser user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
+        public virtual Task ReplaceClaimAsync(TUser user, Claim claim, Claim newClaim,
+            CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -566,26 +566,24 @@ namespace Neo4j.AspNetCore.Identity
 
 
             foreach (var _claim in user.Claims.Where(x => x.Type == claim.Type && x.Value == claim.Value).ToList())
-            {
                 user.RemoveClaim(_claim);
-            }
 
             user.AddClaim(new IdentityClaim(claim));
 
             return Task.FromResult(0);
         }
 
-        public virtual Task RemoveClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
+        public virtual Task RemoveClaimsAsync(TUser user, IEnumerable<Claim> claims,
+            CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
             if (user == null)
                 throw new ArgumentNullException(nameof(user));
 
-            foreach (var _claim in user.Claims.Where(x => claims.Any(claim => x.Type == claim.Type && x.Value == claim.Value)).ToList())
-            {
-                user.RemoveClaim(_claim);
-            }
+            foreach (var _claim in user.Claims
+                .Where(x => claims.Any(claim => x.Type == claim.Type && x.Value == claim.Value))
+                .ToList()) user.RemoveClaim(_claim);
 
             return Task.FromResult(0);
         }
@@ -614,9 +612,11 @@ namespace Neo4j.AspNetCore.Identity
             var result = results?.Select(u => u.Combine()).ToList();
             return result;
         }
+
         #endregion
 
         #region IUserPasswordStore
+
         public virtual Task SetPasswordHashAsync(TUser user, string passwordHash, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
@@ -648,9 +648,11 @@ namespace Neo4j.AspNetCore.Identity
 
             return Task.FromResult(user.PasswordHash != null);
         }
+
         #endregion
 
         #region IUserSecurityStampStore
+
         public virtual Task SetSecurityStampAsync(TUser user, string stamp, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
@@ -672,9 +674,11 @@ namespace Neo4j.AspNetCore.Identity
 
             return Task.FromResult(user.SecurityStamp);
         }
+
         #endregion
 
         #region IUserEmailStore
+
         public virtual Task SetEmailAsync(TUser user, string email, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
@@ -756,7 +760,8 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.Email?.NormalizedValue);
         }
 
-        public virtual Task SetNormalizedEmailAsync(TUser user, string normalizedEmail, CancellationToken cancellationToken)
+        public virtual Task SetNormalizedEmailAsync(TUser user, string normalizedEmail,
+            CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -767,9 +772,11 @@ namespace Neo4j.AspNetCore.Identity
 
             return Task.FromResult(0);
         }
+
         #endregion
 
         #region IUserLockoutStore
+
         public virtual Task<DateTimeOffset?> GetLockoutEndDateAsync(TUser user, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
@@ -780,7 +787,8 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.LockoutEndDate?.Instant);
         }
 
-        public virtual Task SetLockoutEndDateAsync(TUser user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
+        public virtual Task SetLockoutEndDateAsync(TUser user, DateTimeOffset? lockoutEnd,
+            CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -854,6 +862,7 @@ namespace Neo4j.AspNetCore.Identity
         #endregion
 
         #region IUserPhoneNumberStore
+
         public virtual Task SetPhoneNumberAsync(TUser user, string phoneNumber, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
@@ -886,7 +895,8 @@ namespace Neo4j.AspNetCore.Identity
             return Task.FromResult(user.PhoneNumber?.IsConfirmed() == true);
         }
 
-        public virtual Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
+        public virtual Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed,
+            CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
@@ -904,6 +914,7 @@ namespace Neo4j.AspNetCore.Identity
         #endregion
 
         #region IUserTwoFactorStore
+
         public virtual Task SetTwoFactorEnabledAsync(TUser user, bool enabled, CancellationToken cancellationToken)
         {
             ThrowIfDisposed();

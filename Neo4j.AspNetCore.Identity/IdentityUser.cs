@@ -1,11 +1,9 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.Globalization;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Security.Claims;
 using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Identity;
 
 namespace Neo4j.AspNetCore.Identity
 {
@@ -38,83 +36,58 @@ namespace Neo4j.AspNetCore.Identity
 
         public IdentityUser(string userName, string email) : this(userName)
         {
-            if (email != null)
-            {
-                Email = new UserEmail(email);
-            }
+            if (email != null) Email = new UserEmail(email);
         }
 
         public IdentityUser(string userName, UserEmail email) : this(userName)
         {
-            if (email != null)
-            {
-                Email = email;
-            }
+            if (email != null) Email = email;
         }
 
-        [JsonProperty]
-        public virtual string Id { get; protected set; }
+        [JsonProperty] public virtual string Id { get; protected set; }
 
-        [JsonProperty]
-        public virtual string UserName { get; protected set; }
+        [JsonProperty] public virtual string UserName { get; protected set; }
 
-        [JsonProperty]
-        public virtual string NormalizedUserName { get; protected set; }
+        [JsonProperty] public virtual string NormalizedUserName { get; protected set; }
 
-        [JsonProperty]
-        public virtual UserEmail Email { get; protected set; }
+        [JsonProperty] public virtual UserEmail Email { get; protected set; }
 
-        [JsonProperty]
-        public virtual UserPhoneNumber PhoneNumber { get; protected set; }
+        [JsonProperty] public virtual UserPhoneNumber PhoneNumber { get; protected set; }
 
-        [JsonProperty]
-        public virtual string PasswordHash { get; protected set; }
+        [JsonProperty] public virtual string PasswordHash { get; protected set; }
 
-        [JsonProperty]
-        public virtual string SecurityStamp { get; protected set; }
+        [JsonProperty] public virtual string SecurityStamp { get; protected set; }
 
-        [JsonProperty]
-        public virtual bool IsTwoFactorEnabled { get; protected set; }
-        [JsonProperty]
-        public string FirstName { get; set; }
-        [JsonProperty]
-        public string LastName { get; set; }
+        [JsonProperty] public virtual bool IsTwoFactorEnabled { get; protected set; }
+
+        [JsonProperty] public string FirstName { get; set; }
+
+        [JsonProperty] public string LastName { get; set; }
 
         [Column(Relationship.Claims)]
         public virtual IEnumerable<IdentityClaim> Claims
         {
-            get
-            {
-                return _claims;
-            }
+            get => _claims;
 
             protected set
             {
-                if (value != null)
-                {
-                    _claims.AddRange(value.Where(c => c != null));
-                }
+                if (value != null) _claims.AddRange(value.Where(c => c != null));
             }
         }
 
         [Column(Relationship.Logins)]
         public virtual IEnumerable<IdentityExternalLogin> Logins
         {
-            get
-            {
-                return _logins;
-            }
+            get => _logins;
 
             protected set
             {
-                if (value != null)
-                {
-                    _logins.AddRange(value.Where(l => l != null));
-                }
+                if (value != null) _logins.AddRange(value.Where(l => l != null));
             }
         }
+
         /// <summary>
-        /// Collection of roles in the role
+        ///     Collection of roles in the role
         /// </summary>
         [Column(Relationship.Roles)]
         [JsonProperty]
@@ -137,23 +110,18 @@ namespace Neo4j.AspNetCore.Identity
         //    }
         //}
 
-        [JsonIgnore]
-        protected internal List<object> RemovedObjects { get; } = new List<object>();
+        [JsonIgnore] protected internal List<object> RemovedObjects { get; } = new List<object>();
 
         [InverseProperty("User")]
         public virtual IEnumerable<IdentityUser_Role> RolesRelationship { get; protected set; }
 
-        [JsonProperty]
-        public virtual int AccessFailedCount { get; protected set; }
+        [JsonProperty] public virtual int AccessFailedCount { get; protected set; }
 
-        [JsonProperty]
-        public virtual bool IsLockoutEnabled { get; protected set; }
+        [JsonProperty] public virtual bool IsLockoutEnabled { get; protected set; }
 
-        [JsonProperty]
-        public virtual FutureOccurrence LockoutEndDate { get; protected set; }
+        [JsonProperty] public virtual FutureOccurrence LockoutEndDate { get; protected set; }
 
-        [JsonProperty]
-        public virtual Occurrence CreatedOn { get; protected set; }
+        [JsonProperty] public virtual Occurrence CreatedOn { get; protected set; }
 
         //[JsonProperty]
         //public virtual Occurrence DeletedOn { get; protected set; }
@@ -238,30 +206,21 @@ namespace Neo4j.AspNetCore.Identity
 
         public virtual void AddClaim(Claim claim)
         {
-            if (claim == null)
-            {
-                throw new ArgumentNullException(nameof(claim));
-            }
+            if (claim == null) throw new ArgumentNullException(nameof(claim));
 
             AddClaim(new IdentityClaim(claim));
         }
 
         public virtual void AddClaim(IdentityClaim userClaim)
         {
-            if (userClaim == null)
-            {
-                throw new ArgumentNullException(nameof(userClaim));
-            }
+            if (userClaim == null) throw new ArgumentNullException(nameof(userClaim));
 
             _claims.Add(userClaim);
         }
 
         public virtual void RemoveClaim(IdentityClaim userClaim)
         {
-            if (userClaim == null)
-            {
-                throw new ArgumentNullException(nameof(userClaim));
-            }
+            if (userClaim == null) throw new ArgumentNullException(nameof(userClaim));
 
             _claims.Remove(userClaim);
             RemovedObjects.Add(userClaim);
@@ -269,49 +228,36 @@ namespace Neo4j.AspNetCore.Identity
 
         public virtual void AddLogin(IdentityExternalLogin userLogin)
         {
-            if (userLogin == null)
-            {
-                throw new ArgumentNullException(nameof(userLogin));
-            }
+            if (userLogin == null) throw new ArgumentNullException(nameof(userLogin));
 
             _logins.Add(userLogin);
         }
 
         public virtual void RemoveLogin(IdentityExternalLogin userLogin)
         {
-            if (userLogin == null)
-            {
-                throw new ArgumentNullException(nameof(userLogin));
-            }
+            if (userLogin == null) throw new ArgumentNullException(nameof(userLogin));
 
             _logins.Remove(userLogin);
             RemovedObjects.Add(userLogin);
         }
+
         public virtual void AddRole(IdentityRole role)
         {
-            if (role == null)
-            {
-                throw new ArgumentNullException(nameof(role));
-            }
+            if (role == null) throw new ArgumentNullException(nameof(role));
             ((IList<IdentityRole>)Roles).Add(role);
             //  _roles.Add(role);
         }
+
         public virtual void AddRole(string role)
         {
-            if (string.IsNullOrWhiteSpace(role))
-            {
-                throw new ArgumentNullException(nameof(role));
-            }
+            if (string.IsNullOrWhiteSpace(role)) throw new ArgumentNullException(nameof(role));
             ((IList<IdentityRole>)Roles).Add(new IdentityRole(role));
             //  _roles.Add(role);
         }
 
         public virtual void RemoveRole(string role)
         {
-            if (string.IsNullOrWhiteSpace(role))
-            {
-                throw new ArgumentNullException(nameof(role));
-            }
+            if (string.IsNullOrWhiteSpace(role)) throw new ArgumentNullException(nameof(role));
 
             Roles = Roles.Where(x => x.NormalizedName != role).ToList();
             RemovedObjects.Add(role);

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Security.Claims;
 using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Neo4j.AspNetCore.Identity
 {
@@ -19,7 +19,7 @@ namespace Neo4j.AspNetCore.Identity
         }
 
         /// <summary>
-        /// Constructor
+        ///     Constructor
         /// </summary>
         /// <param name="roleName"></param>
         public IdentityRole(string roleName) : this()
@@ -40,8 +40,7 @@ namespace Neo4j.AspNetCore.Identity
         /// </summary>
         public virtual string Name { get; protected internal set; }
 
-        [JsonProperty]
-        public virtual string NormalizedName { get; protected internal set; }
+        [JsonProperty] public virtual string NormalizedName { get; protected internal set; }
 
         [JsonProperty]
         /// <summary>
@@ -50,50 +49,16 @@ namespace Neo4j.AspNetCore.Identity
         public virtual string ConcurrencyStamp { get; protected internal set; } = Guid.NewGuid().ToString();
 
         /// <summary>
-        /// Collection of claims in the role
+        ///     Collection of claims in the role
         /// </summary>
         [Column(Relationship.Claims)]
         public IEnumerable<IdentityClaim> Claims { get; protected internal set; } = new List<IdentityClaim>();
 
-        [JsonIgnore]
-        protected internal List<IdentityClaim> RemovedClaims { get; } = new List<IdentityClaim>();
+        [JsonIgnore] protected internal List<IdentityClaim> RemovedClaims { get; } = new List<IdentityClaim>();
 
-        [JsonProperty]
-        public virtual Occurrence CreatedOn { get; private set; }
+        [JsonProperty] public virtual Occurrence CreatedOn { get; private set; }
 
-        [InverseProperty("Role")]
-        public virtual IEnumerable<IdentityUser_Role> Users { get; }
-
-        public virtual void AddClaim(Claim claim)
-        {
-            if (claim == null)
-            {
-                throw new ArgumentNullException(nameof(claim));
-            }
-
-            AddClaim(new IdentityClaim(claim));
-        }
-
-        public virtual void AddClaim(IdentityClaim claim)
-        {
-            if (claim == null)
-            {
-                throw new ArgumentNullException(nameof(claim));
-            }
-
-            ((IList<IdentityClaim>)Claims).Add(claim);
-        }
-
-        public virtual void RemoveClaim(IdentityClaim claim)
-        {
-            if (claim == null)
-            {
-                throw new ArgumentNullException(nameof(claim));
-            }
-
-            ((IList<IdentityClaim>)Claims).Remove(claim);
-            RemovedClaims.Add(claim);
-        }
+        [InverseProperty("Role")] public virtual IEnumerable<IdentityUser_Role> Users { get; }
 
         public bool Equals(IdentityRole other)
         {
@@ -103,7 +68,29 @@ namespace Neo4j.AspNetCore.Identity
         public bool Equals(string name)
         {
             return name.Equals(NormalizedName)
-                || name.Equals(Name);
+                   || name.Equals(Name);
+        }
+
+        public virtual void AddClaim(Claim claim)
+        {
+            if (claim == null) throw new ArgumentNullException(nameof(claim));
+
+            AddClaim(new IdentityClaim(claim));
+        }
+
+        public virtual void AddClaim(IdentityClaim claim)
+        {
+            if (claim == null) throw new ArgumentNullException(nameof(claim));
+
+            ((IList<IdentityClaim>)Claims).Add(claim);
+        }
+
+        public virtual void RemoveClaim(IdentityClaim claim)
+        {
+            if (claim == null) throw new ArgumentNullException(nameof(claim));
+
+            ((IList<IdentityClaim>)Claims).Remove(claim);
+            RemovedClaims.Add(claim);
         }
     }
 }

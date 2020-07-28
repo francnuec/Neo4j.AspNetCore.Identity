@@ -1,24 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Neo4j.AspNetCore.Identity.Sample.Models;
 using Neo4j.AspNetCore.Identity.Sample.Services;
-using System.IO;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.Options;
 using Neo4jClient;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Neo4jClient.DataAnnotations;
-using Neo4j.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace Neo4j.AspNetCore.Identity.Sample
 {
@@ -28,14 +19,12 @@ namespace Neo4j.AspNetCore.Identity.Sample
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
+                .AddJsonFile("appsettings.json", false, true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true);
 
             if (env.IsDevelopment())
-            {
                 // For more details on using the user secret store see https://go.microsoft.com/fwlink/?LinkID=532709
                 builder.AddUserSecrets<Startup>();
-            }
 
             builder.AddEnvironmentVariables();
             Configuration = builder.Build();
@@ -55,7 +44,7 @@ namespace Neo4j.AspNetCore.Identity.Sample
             {
                 var options = provider.GetService<IOptions<Neo4jDbSettings>>();
                 var client = new GraphClient(new Uri(options.Value.uri),
-                    username: options.Value.username, password: options.Value.password);
+                    options.Value.username, options.Value.password);
                 client.ConnectAsync().Wait();
                 return client;
             });
@@ -63,19 +52,19 @@ namespace Neo4j.AspNetCore.Identity.Sample
             services.AddNeo4jAnnotations<ApplicationContext>(); //services.AddNeo4jAnnotations();
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
-            {
-                //var dataProtectionPath = Path.Combine(HostingEnvironment.WebRootPath, "identity-artifacts");
-                //options.Cookies.ApplicationCookie.AuthenticationScheme = "ApplicationCookie";
-                //options.Cookies.ApplicationCookie.DataProtectionProvider = DataProtectionProvider.Create(dataProtectionPath);
+                {
+                    //var dataProtectionPath = Path.Combine(HostingEnvironment.WebRootPath, "identity-artifacts");
+                    //options.Cookies.ApplicationCookie.AuthenticationScheme = "ApplicationCookie";
+                    //options.Cookies.ApplicationCookie.DataProtectionProvider = DataProtectionProvider.Create(dataProtectionPath);
 
-                options.Lockout.AllowedForNewUsers = true;
+                    options.Lockout.AllowedForNewUsers = true;
 
-                // User settings
-                options.User.RequireUniqueEmail = true;
-            })
-            .AddUserStore<UserStore<ApplicationUser>>()
-            .AddRoleStore<RoleStore<IdentityRole>>()
-            .AddDefaultTokenProviders();
+                    // User settings
+                    options.User.RequireUniqueEmail = true;
+                })
+                .AddUserStore<UserStore<ApplicationUser>>()
+                .AddRoleStore<RoleStore<IdentityRole>>()
+                .AddDefaultTokenProviders();
 
 
             //// Services used by identity
@@ -124,8 +113,8 @@ namespace Neo4j.AspNetCore.Identity.Sample
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    "default",
+                    "{controller=Home}/{action=Index}/{id?}");
             });
         }
     }
