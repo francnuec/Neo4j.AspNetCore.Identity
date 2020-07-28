@@ -56,7 +56,7 @@ namespace Neo4j.AspNetCore.Identity.Sample
                 var options = provider.GetService<IOptions<Neo4jDbSettings>>();
                 var client = new GraphClient(new Uri(options.Value.uri),
                     username: options.Value.username, password: options.Value.password);
-                client.Connect();
+                client.ConnectAsync().Wait();
                 return client;
             });
 
@@ -97,14 +97,13 @@ namespace Neo4j.AspNetCore.Identity.Sample
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
+
+            services.AddApplicationInsightsTelemetry();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
